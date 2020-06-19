@@ -1,0 +1,43 @@
+{
+	"name": "broken-links-inspector",
+	"version": "0.1.0",
+	"description": "Extract and recursively check all URLs reporting broken ones",
+	"main": "index.js",
+	"directories": {
+		"test": "test"
+	},
+	"scripts": {
+		"clean": "rm -rf .nyc_output coverage dist",
+		"test": "mocha -r ts-node/register test/**/*.ts",
+		"coverage": "nyc --reporter=html --reporter=cobertura --reporter=text -e .ts -n \"src/**/*.ts\" -x \"test/**/*.ts\" npm run test"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://git.dbogatov.org/dbogatov/broken-links-inspector.git"
+	},
+	"keywords": [
+		"broken",
+		"links",
+		"checker",
+		"inspector",
+		"bad",
+		"URL"
+	],
+	"author": "Dmytro Bogatov",
+	"license": "MIT",
+	"dependencies": {
+		"@types/node": "^14.0.13",
+		"chalk": "^4.1.0",
+		"commander": "^5.1.0",
+		"htmlparser2": "^4.1.0"
+	},
+	"devDependencies": {
+		"@types/chai": "^4.2.11",
+		"@types/mocha": "^7.0.2",
+		"chai": "^4.2.0",
+		"mocha": "^8.0.1",
+		"nyc": "^15.1.0",
+		"ts-node": "^8.10.2",
+		"typescript": "^3.9.5"
+	}
+}
