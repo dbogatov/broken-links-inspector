@@ -23,8 +23,10 @@ release:
       //${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}
       EOT
     - |
+      PACKAGE=$(cat package.json | grep name | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+    - |
       THIS_VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
-    - LATEST_VERSION=$(npm show mocha version)
+    - LATEST_VERSION=$(npm show $PACKAGE version)
     - |
       echo "This: $THIS_VERSION, latest: $LATEST_VERSION"
     - |
@@ -34,5 +36,8 @@ release:
       else
         npm publish
       fi
+  rules:
+    - allow_failure: true
+    - if: '$CI_COMMIT_REF_NAME == "master"'
   tags:
     - docker
