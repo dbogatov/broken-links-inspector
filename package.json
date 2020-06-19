@@ -11,6 +11,9 @@
 		"test": "mocha -r ts-node/register test/**/*.ts",
 		"coverage": "nyc --reporter=html --reporter=cobertura --reporter=text -e .ts -n \"src/**/*.ts\" -x \"test/**/*.ts\" npm run test"
 	},
+	"publishConfig": {
+		"@dbogatov:registry": "https://git.dbogatov.org/api/v4/projects/227/packages/npm/"
+	},
 	"repository": {
 		"type": "git",
 		"url": "https://git.dbogatov.org/dbogatov/broken-links-inspector.git"

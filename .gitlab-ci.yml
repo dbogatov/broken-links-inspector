@@ -1,5 +1,6 @@
 stages:
   - test
+  - release
 
 test:
   image: dbogatov/docker-sources:node--14.4-alpine3.12
@@ -10,3 +11,15 @@ test:
   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
   tags:
     - docker
+
+release:
+  stage: release
+  script:
+    - |
+      cat <<EOT >> .npmrc
+      @dbogatov:registry=https://${CI_SERVER_HOST}/api/v4/packages/npm/
+      //${CI_SERVER_HOST}/api/v4/packages/npm/:_authToken=${CI_JOB_TOKEN}
+      //${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}
+      EOT
+    - cat .npmrc
+    - npm publish
