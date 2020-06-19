@@ -22,6 +22,17 @@ release:
       //${CI_SERVER_HOST}/api/v4/packages/npm/:_authToken=${CI_JOB_TOKEN}
       //${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}
       EOT
-    - npm publish
+    - |
+      THIS_VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+    - LATEST_VERSION=$(npm show mocha version)
+    - |
+      echo "This: $THIS_VERSION, latest: $LATEST_VERSION"
+    - |
+      if [ "$LATEST_VERSION" = "$THIS_VERSION" ]
+      then
+        echo "This version has already been published"
+      else
+        npm publish
+      fi
   tags:
     - docker
