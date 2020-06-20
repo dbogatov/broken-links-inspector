@@ -9,6 +9,13 @@ test:
     - npm install
     - npm run coverage
   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - coverage/
+    reports:
+      junit: test-results.xml
+      cobertura: coverage/cobertura-coverage.xml
   tags:
     - docker
 

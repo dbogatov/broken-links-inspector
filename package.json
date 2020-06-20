@@ -1,14 +1,14 @@
 {
 	"name": "@dbogatov/broken-links-inspector",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Extract and recursively check all URLs reporting broken ones",
 	"main": "index.js",
 	"directories": {
 		"test": "test"
 	},
 	"scripts": {
-		"clean": "rm -rf .nyc_output coverage dist",
-		"test": "mocha -r ts-node/register test/**/*.ts",
+		"clean": "rm -rf .nyc_output coverage dist test-results.xml",
+		"test": "mocha --reporter mocha-junit-reporter -r ts-node/register test/**/*.ts",
 		"coverage": "nyc --reporter=html --reporter=cobertura --reporter=text -e .ts -n \"src/**/*.ts\" -x \"test/**/*.ts\" npm run test"
 	},
 	"publishConfig": {
@@ -39,6 +39,7 @@
 		"@types/mocha": "^7.0.2",
 		"chai": "^4.2.0",
 		"mocha": "^8.0.1",
+		"mocha-junit-reporter": "^2.0.0",
 		"nyc": "^15.1.0",
 		"ts-node": "^8.10.2",
 		"typescript": "^3.9.5"
