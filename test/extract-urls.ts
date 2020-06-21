@@ -8,22 +8,22 @@ describe("extractURLs", () => {
 
 	it("works for <a href=...>", () => {
 		const result = extractURLs(`<html><a href="${url}">Text</a></html>`, new URLsMatchingSet(URLMatchingRule.AHRef))
-		expect(result).to.eql([url])
+		expect(result).to.eql(new Set([url]))
 	});
 
 	it("works for <script src=...>", () => {
 		const result = extractURLs(`<html><script src="${url}">Text</script></html>`, new URLsMatchingSet(URLMatchingRule.ScriptSrc))
-		expect(result).to.eql([url])
+		expect(result).to.eql(new Set([url]))
 	});
 
 	it("works for <link href=...>", () => {
 		const result = extractURLs(`<html><link href="${url}"></link></html>`, new URLsMatchingSet(URLMatchingRule.LinkHref))
-		expect(result).to.eql([url])
+		expect(result).to.eql(new Set([url]))
 	});
 
 	it("works for <img src=...>", () => {
 		const result = extractURLs(`<html><img src="${url}">Text</img></html>`, new URLsMatchingSet(URLMatchingRule.ImgSrc))
-		expect(result).to.eql([url])
+		expect(result).to.eql(new Set([url]))
 	});
 
 	it("works for many rules", () => {
@@ -36,7 +36,7 @@ describe("extractURLs", () => {
 			</html>`,
 			new URLsMatchingSet()
 		)
-		expect(result).to.eql(["1", "2", "3", "4"])
+		expect(result).to.eql(new Set(["1", "2", "3", "4"]))
 	});
 
 	it("does not match unless rule supplied", () => {
@@ -47,7 +47,7 @@ describe("extractURLs", () => {
 			</html>`,
 			new URLsMatchingSet(URLMatchingRule.ImgSrc)
 		)
-		expect(result).to.eql([url])
+		expect(result).to.eql(new Set([url]))
 	});
 
 	it("filters duplicates", () => {
@@ -59,7 +59,7 @@ describe("extractURLs", () => {
 			</html>`,
 			new URLsMatchingSet()
 		)
-		expect(result).to.eql([url, "another-url"])
+		expect(result).to.eql(new Set([url, "another-url"]))
 	});
 
 	it("fails for unknown rule", () => {
