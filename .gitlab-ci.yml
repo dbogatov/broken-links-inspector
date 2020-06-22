@@ -44,13 +44,13 @@ release:
         npm publish
       fi
   rules:
-    - if: '$CI_COMMIT_REF_NAME == "master"'
+    - if: '$CI_COMMIT_REF_NAME != "master"'
       when: never
   allow_failure: true
   tags:
     - docker
 
-code-intelligence:
+code_navigation:
   image: dbogatov/docker-sources:node--14.4-alpine3.12
   stage: release
   script:
@@ -60,5 +60,8 @@ code-intelligence:
   artifacts:
     reports:
       lsif: dump.lsif
+  rules:
+    - if: '$CI_COMMIT_REF_NAME != "master"'
+      when: never
   tags:
     - docker
