@@ -35,6 +35,7 @@ export class Result {
 export class ResultItem {
 	public url = ""
 	public status = CheckStatus.OK
+	public duration = 0
 	public message?: string
 }
 

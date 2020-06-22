@@ -13,11 +13,11 @@ export class ConsoleReporter implements IReporter {
 		console.log(`${indent ? "\t" : ""}${chalk.green(`OK: ${oks}`)}, ${chalk.grey(`skipped: ${skipped}`)}, ${chalk.red(`broken: ${broken}`)}`)
 	}
 
-	private printCheck(status: CheckStatus, url: string) {
+	private printCheck(check: ResultItem) {
 		let statusLabel: string
 		const labelWidth = 7
 
-		switch (status) {
+		switch (check.status) {
 			case CheckStatus.OK:
 				statusLabel = chalk.green("OK".padEnd(labelWidth))
 				break;
@@ -33,8 +33,8 @@ export class ConsoleReporter implements IReporter {
 				break;
 		}
 
-		if (status != CheckStatus.Skipped) {
-			console.log(`\t${statusLabel} : ${chalk.italic(url)}`)
+		if (check.status != CheckStatus.Skipped) {
+			console.log(`\t${statusLabel} : ${chalk.italic(check.url)} ${check.message ? `(${chalk.italic.grey(check.message)})` : ""}`)
 		}
 	}
 
@@ -66,7 +66,7 @@ export class ConsoleReporter implements IReporter {
 						break
 				}
 
-				this.printCheck(check.status, check.url)
+				this.printCheck(check)
 
 			}
 			this.printTotals(oks, skipped, broken)

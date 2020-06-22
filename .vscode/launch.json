@@ -25,7 +25,14 @@
 			"program": "${workspaceFolder}/dist/index.js",
 			"args": [
 				"inspect",
-				"https://dbogatov.org"
+				"https://dbogatov.org",
+				"-r",
+				"-t",
+				"100",
+				"--ignore-prefixes",
+				"m,l",
+				"--accept-codes",
+				"444,555"
 			],
 			"console": "integratedTerminal",
 			"internalConsoleOptions": "neverOpen",

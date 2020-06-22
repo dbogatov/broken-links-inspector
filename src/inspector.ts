@@ -1,6 +1,7 @@
 import * as parser from "htmlparser2"
 import axios, { AxiosError } from "axios"
 import { Result, CheckStatus } from "./result";
+import { performance } from "perf_hooks"
 
 export class Inspector {
 
@@ -19,14 +20,27 @@ export class Inspector {
 			try {
 				url = parent ? new URL(url, parent).href : url
 
-				if (result.isChecked(url) || this.config.ignoredExtensions.some(ext => url.startsWith(ext + ":"))) {
-					result.add({ url: url, status: CheckStatus.Skipped }, parent)
+				if (result.isChecked(url) || this.config.ignoredPrefixes.some(ext => url.startsWith(ext + ":"))) {
+					result.add({ url: url, status: CheckStatus.Skipped, duration: 0 }, parent)
 				} else {
 
-					const response = await axios.get(parent ? new URL(url, parent).href : url, { timeout: this.config.timeout })
+					const instance = axios.create()
+					instance.interceptors.request.use(config => {
+						config.headers["request-startTime"] = performance.now()
+						return config
+					})
+					instance.interceptors.response.use((response) => {
+						const start = response.config.headers["request-startTime"]
+						const end = performance.now()
+						response.headers["request-duration"] = end - start
+						return response
+					})
+					const response = await instance.get(parent ? new URL(url, parent).href : url, { timeout: this.config.timeout })
+					const duration = response.headers["request-duration"]
+
 					let html = response.data as string
 
-					if (url == originalUrl.href || (recursive && originalUrl.host == new URL(url).host)) {
+					if (url == originalUrl.href || (recursive && originalUrl.origin == new URL(url).origin)) {
 
 						let discoveredURLs = this.extractURLs(html)
 
@@ -35,20 +49,23 @@ export class Inspector {
 						}
 					}
 
-					result.add({ url: url, status: CheckStatus.OK }, parent)
+					result.add({ url: url, status: CheckStatus.OK, duration: duration }, parent)
 				}
 
 			} catch (exception) {
-
 				const error: AxiosError = exception;
 
-				if (!error.response) {
-					result.add({ url: url, status: CheckStatus.GenericError }, parent)
+				if ((exception.message as string).includes("timeout")) {
+					result.add({ url: url, status: CheckStatus.Timeout, duration: this.config.timeout }, parent)
+				} else if (!error.response) {
+					result.add({ url: url, status: CheckStatus.GenericError, duration: 0 }, parent)
 				} else {
+					const duration = performance.now() - error.response.config.headers["request-startTime"]
+
 					if (this.config.acceptedCodes.some(code => code == error.response?.status)) {
-						result.add({ url: url, status: CheckStatus.OK }, parent)
+						result.add({ url: url, status: CheckStatus.OK, duration: duration }, parent)
 					} else {
-						result.add({ url: url, status: CheckStatus.NonSuccessCode, message: `${error.response.status}` }, parent)
+						result.add({ url: url, status: CheckStatus.NonSuccessCode, message: `${error.response.status}`, duration: duration }, parent)
 					}
 				}
 			}
@@ -96,9 +113,10 @@ export class Inspector {
 
 
 export class Config {
-	public acceptedCodes: number[] = [999]
-	public timeout: number = 2000
-	public ignoredExtensions: string[] = ["mailto", "tel"]
+	acceptedCodes: number[] = [999]
+	timeout: number = 2000
+	ignoredPrefixes: string[] = ["mailto", "tel"]
+	skipURLs: string[] = []
 }
 
 export enum URLMatchingRule {
