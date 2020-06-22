@@ -44,7 +44,8 @@ release:
         npm publish
       fi
   rules:
-    - allow_failure: true
     - if: '$CI_COMMIT_REF_NAME == "master"'
+      when: never
+  allow_failure: true
   tags:
     - docker

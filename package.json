@@ -8,8 +8,9 @@
 	},
 	"scripts": {
 		"clean": "rm -rf .nyc_output coverage dist test-results.xml",
-		"test": "mocha --reporter mocha-junit-reporter -r ts-node/register test/**/*.ts",
-		"coverage": "nyc --reporter=html --reporter=cobertura --reporter=text -e .ts -n \"src/**/*.ts\" -x \"test/**/*.ts\" npm run test"
+		"test": "mocha --reporter spec -r ts-node/register test/**/*.ts",
+		"test-junit": "mocha --reporter mocha-junit-reporter -r ts-node/register test/**/*.ts",
+		"coverage": "nyc --reporter=html --reporter=cobertura --reporter=text -e .ts -n \"src/**/*.ts\" -x \"test/**/*.ts\" npm run test-junit"
 	},
 	"publishConfig": {
 		"@dbogatov:registry": "https://git.dbogatov.org/api/v4/projects/227/packages/npm/"
@@ -30,6 +31,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"@types/node": "^14.0.13",
+		"axios": "^0.19.2",
 		"chalk": "^4.1.0",
 		"commander": "^5.1.0",
 		"htmlparser2": "^4.1.0"
