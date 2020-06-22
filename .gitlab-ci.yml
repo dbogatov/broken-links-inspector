@@ -60,3 +60,5 @@ code-intelligence:
   artifacts:
     reports:
       lsif: dump.lsif
+  tags:
+    - docker
