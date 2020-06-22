@@ -17,6 +17,21 @@
 			"console": "integratedTerminal",
 			"internalConsoleOptions": "neverOpen",
 			"protocol": "inspector"
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Index",
+			"program": "${workspaceFolder}/dist/index.js",
+			"args": [
+				"inspect",
+				"https://dbogatov.org"
+			],
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen",
+			"protocol": "inspector",
+			"preLaunchTask": "build",
+			"outFiles": ["${workspaceFolder}/dist/**/*.js"]
 		}
 	]
 }

@@ -1,4 +1,4 @@
-import { extractURLs, URLMatchingRule, URLsMatchingSet } from "../src/extractor"
+import { Inspector, URLsMatchingSet, URLMatchingRule, Config } from "../src/inspector"
 import { expect, assert } from "chai";
 import "mocha";
 
@@ -7,63 +7,63 @@ describe("extractURLs", () => {
 	const url = "dbogatov.org"
 
 	it("works for <a href=...>", () => {
-		const result = extractURLs(`<html><a href="${url}">Text</a></html>`, new URLsMatchingSet(URLMatchingRule.AHRef))
+		const result = new Inspector(new URLsMatchingSet(URLMatchingRule.AHRef), new Config()).extractURLs(`<html><a href="${url}">Text</a></html>`)
 		expect(result).to.eql(new Set([url]))
 	});
 
 	it("works for <script src=...>", () => {
-		const result = extractURLs(`<html><script src="${url}">Text</script></html>`, new URLsMatchingSet(URLMatchingRule.ScriptSrc))
+		const result = new Inspector(new URLsMatchingSet(URLMatchingRule.ScriptSrc), new Config()).extractURLs(`<html><script src="${url}">Text</script></html>`)
 		expect(result).to.eql(new Set([url]))
 	});
 
 	it("works for <link href=...>", () => {
-		const result = extractURLs(`<html><link href="${url}"></link></html>`, new URLsMatchingSet(URLMatchingRule.LinkHref))
+		const result = new Inspector(new URLsMatchingSet(URLMatchingRule.LinkHref), new Config()).extractURLs(`<html><link href="${url}"></link></html>`)
 		expect(result).to.eql(new Set([url]))
 	});
 
 	it("works for <img src=...>", () => {
-		const result = extractURLs(`<html><img src="${url}">Text</img></html>`, new URLsMatchingSet(URLMatchingRule.ImgSrc))
+		const result = new Inspector(new URLsMatchingSet(URLMatchingRule.ImgSrc), new Config()).extractURLs(`<html><img src="${url}">Text</img></html>`)
 		expect(result).to.eql(new Set([url]))
 	});
 
 	it("works for many rules", () => {
-		const result = extractURLs(
-			`<html>
-				<a href="1">Text</a>
-				<script src="2">Text</script>
-				<link href="3"></link>
-				<img src="4">Text</img>
-			</html>`,
-			new URLsMatchingSet()
-		)
+		const result = new Inspector(new URLsMatchingSet(), new Config())
+			.extractURLs(
+				`<html>
+					<a href="1">Text</a>
+					<script src="2">Text</script>
+					<link href="3"></link>
+					<img src="4">Text</img>
+				</html>`
+			)
 		expect(result).to.eql(new Set(["1", "2", "3", "4"]))
 	});
 
 	it("does not match unless rule supplied", () => {
-		const result = extractURLs(
-			`<html>
-				<img src="${url}">Text</img>
-				<link href="another-url"></link>
-			</html>`,
-			new URLsMatchingSet(URLMatchingRule.ImgSrc)
-		)
+		const result = new Inspector(new URLsMatchingSet(URLMatchingRule.ImgSrc), new Config())
+			.extractURLs(
+				`<html>
+					<img src="${url}">Text</img>
+					<link href="another-url"></link>
+				</html>`
+			)
 		expect(result).to.eql(new Set([url]))
 	});
 
 	it("filters duplicates", () => {
-		const result = extractURLs(
-			`<html>
-				<img src="${url}">Text</img>
-				<script src="${url}">Text</script>
-				<link href="another-url"></link>
-			</html>`,
-			new URLsMatchingSet()
-		)
+		const result = new Inspector(new URLsMatchingSet(), new Config())
+			.extractURLs(
+				`<html>
+					<img src="${url}">Text</img>
+					<script src="${url}">Text</script>
+					<link href="another-url"></link>
+				</html>`
+			)
 		expect(result).to.eql(new Set([url, "another-url"]))
 	});
 
 	it("fails for unknown rule", () => {
-		assert.throws(() => extractURLs(`<html><img src="${url}">Text</img></html>`, new URLsMatchingSet("error" as URLMatchingRule)), /unknown/)
+		assert.throws(() => new Inspector(new URLsMatchingSet("error" as URLMatchingRule), new Config()).extractURLs(`<html><img src="${url}">Text</img></html>`), /unknown/)
 	});
 
 });
