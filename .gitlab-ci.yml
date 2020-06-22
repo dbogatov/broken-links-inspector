@@ -44,8 +44,8 @@ release:
         npm publish
       fi
   rules:
-    - if: '$CI_COMMIT_REF_NAME != "master"'
-      when: never
+    - if: '$CI_COMMIT_REF_NAME == "master"'
+      when: on_success
   allow_failure: true
   tags:
     - docker
@@ -61,7 +61,7 @@ code_navigation:
     reports:
       lsif: dump.lsif
   rules:
-    - if: '$CI_COMMIT_REF_NAME != "master"'
-      when: never
+    - if: '$CI_COMMIT_REF_NAME == "master"'
+      when: on_success
   tags:
     - docker
