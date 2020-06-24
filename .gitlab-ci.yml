@@ -43,7 +43,7 @@ release:
         exit 0
       fi
     - npm install
-    - npm build
+    - npm run build
     - sed -i "s#\"$PACKAGE\"#\"@dbogatov/$PACKAGE\"#g" package.json
     - npm publish
     - |
