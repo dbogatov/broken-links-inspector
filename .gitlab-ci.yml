@@ -41,7 +41,7 @@ release:
       then
         echo "This version has already been published"
       else
-        sed "s#\"$PACKAGE\"#\"@dbogatov/$PACKAGE\"#g" package.json
+        sed -i "s#\"$PACKAGE\"#\"@dbogatov/$PACKAGE\"#g" package.json
         npm publish
       fi
   rules:
