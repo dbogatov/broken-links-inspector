@@ -42,6 +42,7 @@ release:
         echo "This version has already been published"
         exit 0
       fi
+    - npm install
     - sed -i "s#\"$PACKAGE\"#\"@dbogatov/$PACKAGE\"#g" package.json
     - npm publish
     - |
