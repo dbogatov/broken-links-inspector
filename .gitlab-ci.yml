@@ -40,10 +40,16 @@ release:
       if [ "$LATEST_VERSION" = "$THIS_VERSION" ]
       then
         echo "This version has already been published"
-      else
-        sed -i "s#\"$PACKAGE\"#\"@dbogatov/$PACKAGE\"#g" package.json
-        npm publish
+        exit 0
       fi
+    - sed -i "s#\"$PACKAGE\"#\"@dbogatov/$PACKAGE\"#g" package.json
+    - npm publish
+    - |
+      cat <<EOT > .npmrc
+      //registry.npmjs.org/:_authToken=${NPM_TOKEN}
+      EOT
+    - sed -i "s#\"@dbogatov/$PACKAGE\"#\"$PACKAGE\"#g" package.json
+    - npm publish
   rules:
     - if: '$CI_COMMIT_REF_NAME == "master"'
       when: on_success
