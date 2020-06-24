@@ -3,9 +3,21 @@ import { IReporter } from "./report"
 export class Result {
 	private pages = new Map<string, ResultItem[]>()
 	private checkedUrls = new Set<string>()
+	private addedCount = 0
+	private atLeastOneBroken = false
+
+	constructor(readonly ignoreSkipped: boolean) { }
 
 	public add(completedCheck: ResultItem, parent: string = "original request") {
-		// console.log(`${completedCheck.url} : ${completedCheck.status} ${completedCheck.message ? completedCheck.message : ""}`) // TODO
+		if (completedCheck.status == CheckStatus.Skipped && this.ignoreSkipped) {
+			return
+		}
+
+		if (this.addedCount > 0 && this.addedCount % 80 == 0) {
+			process.stdout.write("\n")
+		}
+		process.stdout.write(completedCheck.status == CheckStatus.OK || completedCheck.status == CheckStatus.Skipped ? "." : "x")
+		this.addedCount++
 
 		if (this.pages.has(parent)) {
 			this.pages.get(parent)?.push(completedCheck)
@@ -13,6 +25,14 @@ export class Result {
 			this.pages.set(parent, [completedCheck])
 		}
 		this.checkedUrls.add(completedCheck.url)
+
+		if (
+			completedCheck.status == CheckStatus.GenericError ||
+			completedCheck.status == CheckStatus.Timeout ||
+			completedCheck.status == CheckStatus.NonSuccessCode
+		) {
+			this.atLeastOneBroken = true
+		}
 	}
 
 	public isChecked(url: string): boolean {
@@ -27,15 +47,18 @@ export class Result {
 		return count
 	}
 
-	public report<ReporterT extends IReporter>(reporter: ReporterT): boolean {
-		return reporter.process(this.pages)
+	public report<ReporterT extends IReporter>(reporter: ReporterT): void {
+		reporter.process(this.pages)
+	}
+
+	public success() {
+		return !this.atLeastOneBroken
 	}
 }
 
 export class ResultItem {
 	public url = ""
 	public status = CheckStatus.OK
-	public duration = 0
 	public message?: string
 }
 

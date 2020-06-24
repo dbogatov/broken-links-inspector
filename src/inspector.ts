@@ -1,7 +1,7 @@
 import * as parser from "htmlparser2"
 import axios, { AxiosError } from "axios"
 import { Result, CheckStatus } from "./result";
-import { performance } from "perf_hooks"
+import { isMatch } from "matcher"
 
 export class Inspector {
 
@@ -10,64 +10,83 @@ export class Inspector {
 		private readonly config: Config
 	) { }
 
+	async timeout<T>(timeoutMs: number, promise: () => Promise<T>, failureMessage: string = "timeout"): Promise<T> {
+		let timeoutHandle: NodeJS.Timeout | undefined
+		const timeoutPromise = new Promise<never>((resolve, reject) => {
+			timeoutHandle = setTimeout(() => reject(new Error(failureMessage)), timeoutMs)
+		})
+
+		const result = await Promise.race([
+			promise(),
+			timeoutPromise
+		]);
+		clearTimeout(timeoutHandle!);
+		return result;
+	}
+
 	async processURL(originalUrl: URL, recursive: boolean): Promise<Result> {
 
-		let result = new Result();
-		let urlsToCheck: [string, string?][] = [[originalUrl.href, undefined]]
+		let result = new Result(this.config.ignoreSkipped);
+		// [url, GET, parent?]
+		let urlsToCheck: [string, boolean, string?][] = [[originalUrl.href, true, undefined]]
 
-		let processingRoutine = async (url: string, parent?: string) => {
+		let processingRoutine = async (url: string, useGet: boolean, parent?: string) => {
 
 			try {
-				url = parent ? new URL(url, parent).href : url
+				url = parent ? new URL(url, parent).href : new URL(url).href
+				if (url.includes("#")) {
+					url = url.split("#")[0]
+				}
+				let shouldParse = url == originalUrl.href || (recursive && originalUrl.origin == new URL(url).origin)
 
-				if (result.isChecked(url) || this.config.ignoredPrefixes.some(ext => url.startsWith(ext + ":"))) {
-					result.add({ url: url, status: CheckStatus.Skipped, duration: 0 }, parent)
+				if (
+					result.isChecked(url) ||
+					this.config.ignoredPrefixes.some(ext => url.startsWith(ext + ":")) ||
+					this.config.skipURLs.some(glob => url.includes(glob) || isMatch(url, glob))
+				) {
+					result.add({ url: url, status: CheckStatus.Skipped }, parent)
 				} else {
+					let urlToCheck = parent ? new URL(url, parent).href : url
 
 					const instance = axios.create()
-					instance.interceptors.request.use(config => {
-						config.headers["request-startTime"] = performance.now()
-						return config
-					})
-					instance.interceptors.response.use((response) => {
-						const start = response.config.headers["request-startTime"]
-						const end = performance.now()
-						response.headers["request-duration"] = end - start
-						return response
-					})
-					const response = await instance.get(parent ? new URL(url, parent).href : url, { timeout: this.config.timeout })
-					const duration = response.headers["request-duration"]
+					const response = useGet || shouldParse ?
+						await this.timeout(this.config.timeout, () => instance.get(urlToCheck)) :
+						await this.timeout(this.config.timeout, () => instance.head(urlToCheck))
 
 					let html = response.data as string
 
-					if (url == originalUrl.href || (recursive && originalUrl.origin == new URL(url).origin)) {
+					if (shouldParse) {
 
 						let discoveredURLs = this.extractURLs(html)
 
 						for (const discovered of discoveredURLs) {
-							urlsToCheck.push([discovered, url])
+							urlsToCheck.push([discovered, this.config.get, url])
 						}
 					}
 
-					result.add({ url: url, status: CheckStatus.OK, duration: duration }, parent)
+					result.add({ url: url, status: CheckStatus.OK }, parent)
 				}
 
 			} catch (exception) {
 				const error: AxiosError = exception;
 
-				if ((exception.message as string).includes("timeout")) {
-					result.add({ url: url, status: CheckStatus.Timeout, duration: this.config.timeout }, parent)
-				} else if (!error.response) {
-					result.add({ url: url, status: CheckStatus.GenericError, duration: 0 }, parent)
+				// if HEAD was used, retry with GET
+				if (!useGet) {
+					urlsToCheck.push([url, true, parent])
 				} else {
-					const duration = performance.now() - error.response.config.headers["request-startTime"]
-
-					if (this.config.acceptedCodes.some(code => code == error.response?.status)) {
-						result.add({ url: url, status: CheckStatus.OK, duration: duration }, parent)
+					if ((exception.message as string).includes("timeout")) {
+						result.add({ url: url, status: CheckStatus.Timeout }, parent)
+					} else if (!error.response) {
+						result.add({ url: url, status: CheckStatus.GenericError }, parent)
 					} else {
-						result.add({ url: url, status: CheckStatus.NonSuccessCode, message: `${error.response.status}`, duration: duration }, parent)
+						if (this.config.acceptedCodes.some(code => code == error.response?.status)) {
+							result.add({ url: url, status: CheckStatus.OK }, parent)
+						} else {
+							result.add({ url: url, status: CheckStatus.NonSuccessCode, message: `${error.response.status}` }, parent)
+						}
 					}
 				}
+
 			}
 
 		}
@@ -76,15 +95,16 @@ export class Inspector {
 
 		while (urlsToCheck.length > 0) {
 
-			let [url, parent] = urlsToCheck.pop()!
+			let [url, useGet, parent] = urlsToCheck.pop()!
 
-			promises.push(processingRoutine(url, parent))
+			promises.push(processingRoutine(url, useGet, parent))
 
 			if (urlsToCheck.length == 0) {
 				await Promise.all(promises)
 			}
 		}
 
+		console.log()
 		return result
 	}
 
@@ -117,13 +137,17 @@ export class Config {
 	timeout: number = 2000
 	ignoredPrefixes: string[] = ["mailto", "tel"]
 	skipURLs: string[] = []
+	verbose: boolean = false
+	get: boolean = false
+	ignoreSkipped: boolean = false
 }
 
 export enum URLMatchingRule {
 	AHRef = "<a href>",
 	ScriptSrc = "<script src>",
 	LinkHref = "<link href>",
-	ImgSrc = "<img src>"
+	ImgSrc = "<img src>",
+	IFrameSrc = "<iframe src>"
 }
 
 export class URLsMatchingSet {
@@ -154,6 +178,11 @@ export class URLsMatchingSet {
 					break;
 				case URLMatchingRule.ImgSrc:
 					if (name === "img" && "src" in attributes) {
+						return attributes.src
+					}
+					break;
+				case URLMatchingRule.IFrameSrc:
+					if (name === "iframe" && "src" in attributes) {
 						return attributes.src
 					}
 					break;

@@ -3,3 +3,5 @@ node_modules
 .nyc_output
 coverage
 test-results.xml
+dump.lsif
+junit-report.xml

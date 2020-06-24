@@ -26,6 +26,11 @@ describe("extractURLs", () => {
 		expect(result).to.eql(new Set([url]))
 	});
 
+	it("works for <iframe src=...>", () => {
+		const result = new Inspector(new URLsMatchingSet(URLMatchingRule.IFrameSrc), new Config()).extractURLs(`<html><iframe src="${url}">Text</iframe></html>`)
+		expect(result).to.eql(new Set([url]))
+	});
+
 	it("works for many rules", () => {
 		const result = new Inspector(new URLsMatchingSet(), new Config())
 			.extractURLs(

@@ -34,11 +34,15 @@
 		"axios": "^0.19.2",
 		"chalk": "^4.1.0",
 		"commander": "^5.1.0",
-		"htmlparser2": "^4.1.0"
+		"htmlparser2": "^4.1.0",
+		"js2xmlparser": "^4.0.1",
+		"matcher": "^3.0.0",
+		"sinon": "^9.0.2"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.2.11",
 		"@types/mocha": "^7.0.2",
+		"@types/sinon": "^9.0.4",
 		"chai": "^4.2.0",
 		"mocha": "^8.0.1",
 		"mocha-junit-reporter": "^2.0.0",

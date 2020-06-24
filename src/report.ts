@@ -1,11 +1,123 @@
-import { ResultItem, CheckStatus } from "./result";
-import chalk from "chalk";
+import { ResultItem, CheckStatus } from "./result"
+import chalk from "chalk"
+import { parse } from "js2xmlparser"
+
+import fs from "fs";
 
 export interface IReporter {
-	process(pages: Map<string, ResultItem[]>): boolean
+	process(pages: Map<string, ResultItem[]>): void
 }
 
-// ConsoleReporter
+/**
+ *	testsuite = [
+ *		{
+ *			"@": {
+ *				name: "parent URL",
+ *				tests: totalTests
+ *				failures: broken,
+ *				skipped: skipped
+ *			}
+ *			"testcase" = [
+ *				{
+ *					"@": {
+ *						name: URL,
+ *					},
+ *					error?: {
+ *						"@": {
+ *							message: "error message"
+ *						}
+ *					},
+ *					skipped?: {}
+ *				}
+ *			]
+ *		}
+ *	]
+ */
+export class JUnitReporter implements IReporter {
+
+	constructor(readonly toFile: boolean = true) { }
+
+	process(pages: Map<string, ResultItem[]>): void {
+
+		let junitObject: any[] = []
+
+		for (const page of pages) {
+
+			let testsuite: any = {
+				testcase: []
+			}
+
+			let skipped = 0
+			let oks = 0
+			let broken = 0
+
+			for (const check of page[1]) {
+
+				let testcase: any = {
+					"@": {
+						name: check.url,
+						classname: page[0],
+						time: "0.0000"
+					}
+				}
+
+				switch (check.status) {
+					case CheckStatus.NonSuccessCode:
+						testcase["failure"] = {
+							"@": {
+								message: check.message
+							}
+						}
+						broken++
+						break
+					case CheckStatus.GenericError:
+						testcase["failure"] = {
+							"@": {
+								message: "Unknown error"
+							}
+						}
+						broken++
+						break
+					case CheckStatus.Timeout:
+						testcase["failure"] = {
+							"@": {
+								message: "Timeout"
+							}
+						}
+						broken++
+						break
+					case CheckStatus.Skipped:
+						testcase["skipped"] = {}
+						skipped++
+						break
+					case CheckStatus.OK:
+						oks++
+						break
+				}
+
+				testsuite.testcase.push(testcase)
+			}
+
+			testsuite["@"] = {
+				name: page[0],
+				tests: oks + skipped + broken,
+				failures: broken,
+				skipped: skipped,
+				time: "0.0000"
+			}
+
+			junitObject.push(testsuite)
+		}
+
+		let junitXml = parse("testsuites", { testsuite: junitObject })
+		if (this.toFile) {
+			fs.writeFileSync("junit-report.xml", junitXml)
+		} else {
+			console.log(junitXml)
+		}
+	}
+
+}
 
 export class ConsoleReporter implements IReporter {
 
@@ -38,7 +150,7 @@ export class ConsoleReporter implements IReporter {
 		}
 	}
 
-	process(pages: Map<string, ResultItem[]>): boolean {
+	process(pages: Map<string, ResultItem[]>) {
 
 		let allSkipped = 0
 		let allOks = 0
@@ -75,8 +187,6 @@ export class ConsoleReporter implements IReporter {
 			allBroken += broken
 		}
 		this.printTotals(allOks, allSkipped, allBroken, false)
-
-		return allBroken == 0
 	}
 
 }
