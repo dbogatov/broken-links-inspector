@@ -1,8 +1,9 @@
 {
 	"name": "@dbogatov/broken-links-inspector",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"description": "Extract and recursively check all URLs reporting broken ones",
-	"main": "index.js",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"directories": {
 		"test": "test"
 	},
@@ -10,7 +11,9 @@
 		"clean": "rm -rf .nyc_output coverage dist test-results.xml",
 		"test": "mocha --reporter spec -r ts-node/register test/**/*.ts",
 		"test-junit": "mocha --reporter mocha-junit-reporter -r ts-node/register test/**/*.ts",
-		"coverage": "nyc --reporter=html --reporter=cobertura --reporter=text -e .ts -n \"src/**/*.ts\" -x \"test/**/*.ts\" npm run test-junit"
+		"coverage": "nyc --reporter=html --reporter=cobertura --reporter=text -e .ts -n \"src/**/*.ts\" -x \"test/**/*.ts\" npm run test-junit",
+		"build": "tsc",
+		"prepare": "npm run build"
 	},
 	"publishConfig": {
 		"@dbogatov:registry": "https://git.dbogatov.org/api/v4/projects/227/packages/npm/"

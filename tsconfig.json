@@ -9,12 +9,14 @@
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
 		"noImplicitAny": true,
-		"sourceMap": true
+		"sourceMap": true,
+		"declaration": true
 	},
 	"include": [
 		"src/**/*",
 	],
 	"exclude": [
-		"node_modules"
+		"node_modules",
+		"dist"
 	]
 }
