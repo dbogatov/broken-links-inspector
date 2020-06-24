@@ -41,6 +41,7 @@ release:
       then
         echo "This version has already been published"
       else
+
         npm publish
       fi
   rules:

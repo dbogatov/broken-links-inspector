@@ -1,6 +1,6 @@
 {
-	"name": "@dbogatov/broken-links-inspector",
-	"version": "0.2.1",
+	"name": "broken-links-inspector",
+	"version": "0.2.2",
 	"description": "Extract and recursively check all URLs reporting broken ones",
 	"main": "dist/inspector.js",
 	"types": "dist/inspector.d.ts",
@@ -23,7 +23,8 @@
 		"src"
 	],
 	"publishConfig": {
-		"@dbogatov:registry": "https://git.dbogatov.org/api/v4/projects/227/packages/npm/"
+		"@dbogatov:registry": "https://git.dbogatov.org/api/v4/projects/227/packages/npm/",
+		"registry": "https://registry.npmjs.org/"
 	},
 	"repository": {
 		"type": "git",
