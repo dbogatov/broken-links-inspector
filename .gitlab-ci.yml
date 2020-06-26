@@ -6,8 +6,8 @@ lint:
   image: dbogatov/docker-sources:node--14.4-alpine3.12
   stage: test
   script:
-    - npm -g install eslint
-    - eslint ./{src,test}/**/*.ts -c .eslintrc.yml
+    - npm install
+    - npm run lint
   tags:
     - docker
 

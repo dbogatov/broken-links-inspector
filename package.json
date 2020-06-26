@@ -10,6 +10,7 @@
 	"scripts": {
 		"clean": "rm -rf .nyc_output coverage dist test-results.xml junit-report.xml dump.lsif",
 		"test": "mocha --reporter spec -r ts-node/register test/**/*.ts",
+		"lint": "eslint ./{src,test}/**/*.ts -c .eslintrc.yml",
 		"test-junit": "mocha --reporter mocha-junit-reporter -r ts-node/register test/**/*.ts",
 		"coverage": "nyc --reporter=html --reporter=cobertura --reporter=text -e .ts -n \"src/**/*.ts\" -x \"test/**/*.ts\" npm run test-junit",
 		"build": "tsc",
