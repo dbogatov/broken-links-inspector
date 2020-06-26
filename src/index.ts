@@ -6,7 +6,7 @@ import { Inspector, URLsMatchingSet } from "./inspector"
 import { ConsoleReporter, JUnitReporter } from "./report"
 
 commander
-	.version("1.1.1")
+	.version("1.1.2")
 	.description("Extract and recursively check all URLs reporting broken ones")
 
 commander
@@ -30,7 +30,7 @@ commander
 			process.exit(1)
 		}
 
-		let inspector = new Inspector(new URLsMatchingSet(), {
+		const inspector = new Inspector(new URLsMatchingSet(), {
 			acceptedCodes: inspectObj.acceptCodes as number[],
 			timeout: parseInt(inspectObj.timeout as string),
 			ignoredPrefixes: inspectObj.ignorePrefixes as string[],
@@ -41,7 +41,7 @@ commander
 			disablePrint: false
 		})
 
-		let result = await inspector.processURL(new URL(url), inspectObj.recursive as boolean)
+		const result = await inspector.processURL(new URL(url), inspectObj.recursive as boolean)
 
 		for (const reporter of inspectObj.reporters as string[]) {
 			switch (reporter) {

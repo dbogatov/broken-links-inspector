@@ -1,10 +1,10 @@
 import { ResultItem, CheckStatus } from "./result"
 import chalk from "chalk"
 import { parse } from "js2xmlparser"
-import fs from "fs";
+import fs from "fs"
 
 export interface IReporter {
-	process(pages: Map<string, ResultItem[]>): any
+	process(pages: Map<string, ResultItem[]>): unknown
 }
 
 /**
@@ -38,11 +38,35 @@ export class JUnitReporter implements IReporter {
 
 	process(pages: Map<string, ResultItem[]>): void {
 
-		let junitObject: any[] = []
+		type TestCase = {
+			"@": {
+				name: string,
+				classname: string,
+				time: string,
+			},
+			failure?: {
+				"@": {
+					message?: string
+				}
+			},
+			skipped?: unknown
+		}
+		type TestSuite = {
+			testcase: TestCase[],
+			"@"?: {
+				name: string,
+				tests: number,
+				failures: number,
+				skipped: number,
+				time: string
+			}
+		}
+
+		const junitObject: TestSuite[] = []
 
 		for (const page of pages) {
 
-			let testsuite: any = {
+			const testsuite: TestSuite = {
 				testcase: []
 			}
 
@@ -52,7 +76,7 @@ export class JUnitReporter implements IReporter {
 
 			for (const check of page[1]) {
 
-				let testcase: any = {
+				const testcase: TestCase = {
 					"@": {
 						name: check.url,
 						classname: page[0],
@@ -108,7 +132,7 @@ export class JUnitReporter implements IReporter {
 			junitObject.push(testsuite)
 		}
 
-		let junitXml = parse("testsuites", { testsuite: junitObject })
+		const junitXml = parse("testsuites", { testsuite: junitObject })
 		if (this.toFile) {
 			fs.writeFileSync("junit-report.xml", junitXml)
 		} else {
@@ -120,7 +144,7 @@ export class JUnitReporter implements IReporter {
 
 export class ConsoleReporter implements IReporter {
 
-	private printTotals(oks: number, skipped: number, broken: number, indent: boolean = true) {
+	private printTotals(oks: number, skipped: number, broken: number, indent = true) {
 		console.log(`${indent ? "\t" : ""}${chalk.green(`OK: ${oks}`)}, ${chalk.grey(`skipped: ${skipped}`)}, ${chalk.red(`broken: ${broken}`)}`)
 	}
 
@@ -131,17 +155,17 @@ export class ConsoleReporter implements IReporter {
 		switch (check.status) {
 			case CheckStatus.OK:
 				statusLabel = chalk.green("OK".padEnd(labelWidth))
-				break;
+				break
 			case CheckStatus.Skipped:
 				statusLabel = chalk.gray("SKIP".padEnd(labelWidth))
-				break;
+				break
 			case CheckStatus.Timeout:
 				statusLabel = chalk.yellow("TIMEOUT".padEnd(labelWidth))
-				break;
+				break
 			case CheckStatus.NonSuccessCode:
 			case CheckStatus.GenericError:
 				statusLabel = chalk.red("BROKEN".padEnd(labelWidth))
-				break;
+				break
 		}
 
 		if (check.status != CheckStatus.Skipped) {
@@ -149,7 +173,7 @@ export class ConsoleReporter implements IReporter {
 		}
 	}
 
-	process(pages: Map<string, ResultItem[]>) {
+	process(pages: Map<string, ResultItem[]>): void {
 
 		let allSkipped = 0
 		let allOks = 0

@@ -1,9 +1,9 @@
 import { Inspector, URLsMatchingSet, Config, IHttpClient, HttpClientFailure, AxiosHttpClient } from "../src/inspector"
-import { assert } from "chai";
-import "mocha";
-import { ConsoleReporter, JUnitReporter, IReporter } from "../src/report";
-import { ResultItem, CheckStatus, Result } from "../src/result";
-import intercept from "intercept-stdout";
+import { assert } from "chai"
+import "mocha"
+import { ConsoleReporter, JUnitReporter, IReporter } from "../src/report"
+import { ResultItem, CheckStatus, Result } from "../src/result"
+import intercept from "intercept-stdout"
 
 class MockHttpClient implements IHttpClient {
 
@@ -11,6 +11,7 @@ class MockHttpClient implements IHttpClient {
 	constructor(readonly map: Map<string, [string[], boolean, boolean, number]>) { }
 
 	async request(get: boolean, url: string): Promise<string> {
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const [urls, timeout, failure, code] = this.map.get(url)!
 		if (timeout) {
 			throw new HttpClientFailure(true, -1)
@@ -27,16 +28,17 @@ class MockHttpClient implements IHttpClient {
 }
 
 class MockReporter implements IReporter {
-	process(pages: Map<string, ResultItem[]>): any {
+	process(pages: Map<string, ResultItem[]>): Map<string, ResultItem[]> {
 		return pages
 	}
 }
 
-function toURL(url: string, path: string = "") {
+function toURL(url: string, path = "") {
 	return new URL(`https://${url}/${path}`).href
 }
 
 function stripEffects(text: string) {
+	// eslint-disable-next-line no-control-regex
 	return text.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, "")
 }
 
@@ -44,12 +46,15 @@ function assertEqualResults(expected: Map<string, ResultItem[]>, actual: Map<str
 
 	for (const [expectedURL, expectedChecks] of expected) {
 		assert(actual.has(expectedURL))
-		let actualChecks = actual.get(expectedURL)!
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		const actualChecks = actual.get(expectedURL)!
 		assert(expectedChecks.length == actualChecks.length)
 		for (const expectedCheck of expectedChecks) {
-			let actualCheck = actualChecks.find(c => c.url === expectedCheck.url)
+			const actualCheck = actualChecks.find(c => c.url === expectedCheck.url)
 			assert(actualCheck)
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			assert(expectedCheck.status == actualCheck!.status)
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			assert(expectedCheck.message == actualCheck!.message)
 		}
 	}
@@ -102,7 +107,7 @@ describe("Axios web server", async () => {
 		try {
 			await new AxiosHttpClient(5, []).request(false, "https://dbogatov.org")
 		} catch (exception) {
-			const error: HttpClientFailure = exception;
+			const error: HttpClientFailure = exception
 			assert(error.timeout)
 		}
 	})
@@ -111,7 +116,7 @@ describe("Axios web server", async () => {
 		try {
 			await new AxiosHttpClient(2000, []).request(false, "https://dbogatov.org/not-found-123")
 		} catch (exception) {
-			const error: HttpClientFailure = exception;
+			const error: HttpClientFailure = exception
 			assert(error.code == 404)
 		}
 	})
@@ -120,7 +125,7 @@ describe("Axios web server", async () => {
 		try {
 			await new AxiosHttpClient(1000, []).request(false, "bad-url")
 		} catch (exception) {
-			const error: HttpClientFailure = exception;
+			const error: HttpClientFailure = exception
 			assert(!error.timeout)
 			assert(error.code == -1)
 		}
@@ -135,7 +140,7 @@ describe("process mock URL", function () {
 	([true, false] as boolean[]).forEach(recursive => {
 
 		it(`processes ${recursive ? "" : "non-"}recursive`, async () => {
-			let config = new Config()
+			const config = new Config()
 			config.disablePrint = true
 			config.skipURLs = ["to-skip"]
 			const inspector = new Inspector(
@@ -143,14 +148,14 @@ describe("process mock URL", function () {
 				config,
 				httpClient
 			)
-			let unhook_intercept = intercept(_ => { return "" });
+			const unhook_intercept = intercept(_ => { return "" })
 
 			const result = await inspector.processURL(new URL("https://original.com"), recursive)
 
-			unhook_intercept();
+			unhook_intercept()
 
 			const actual = result.report(new MockReporter()) as Map<string, ResultItem[]>
-			let expected = new Map(expectedNonRecursive)
+			const expected = new Map(expectedNonRecursive)
 
 			if (recursive) {
 				expected.set(
@@ -164,26 +169,26 @@ describe("process mock URL", function () {
 
 			assertEqualResults(expected, actual)
 			assert(!result.success())
-		});
+		})
 	})
 
 	describe("reporters", function () {
 
 		it("console", () => {
 
-			let log: string = ""
-			let unhook_intercept = intercept(line => {
+			let log = ""
+			const unhook_intercept = intercept(line => {
 				log += stripEffects(line)
 				return ""
-			});
+			})
 
-			let result = new Result(true, true)
+			const result = new Result(true, true)
 			result.set(expectedNonRecursive)
 			result.report(new ConsoleReporter())
 
-			unhook_intercept();
+			unhook_intercept()
 
-			let lines = log.split(/\r?\n/)
+			const lines = log.split(/\r?\n/)
 
 			for (const [expectedURL, expectedChecks] of expectedNonRecursive) {
 				assert(lines.find(l => l.startsWith(expectedURL)))
@@ -192,13 +197,15 @@ describe("process mock URL", function () {
 					if (expectedCheck.status == CheckStatus.Skipped) {
 						continue
 					}
-					let check = lines.find(l => l.includes("\t") && l.includes(expectedCheck.url + " "))
+					const check = lines.find(l => l.includes("\t") && l.includes(expectedCheck.url + " "))
 					assert(check, `${expectedCheck.url} not found`)
 					assert(
+						// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 						check!.includes(expectedCheck.status == CheckStatus.NonSuccessCode || expectedCheck.status == CheckStatus.GenericError ? "BROKEN" : expectedCheck.status),
 						`${expectedCheck.url}: status (${expectedCheck.status}) not found in "${check}"`
 					)
 					if (expectedCheck.message) {
+						// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 						assert(check!.includes(expectedCheck.message))
 					}
 				}
@@ -207,21 +214,21 @@ describe("process mock URL", function () {
 
 		it("junit", () => {
 
-			let log: string = ""
-			let unhook_intercept = intercept(line => {
+			let log = ""
+			const unhook_intercept = intercept(line => {
 				log += line
 				return ""
-			});
+			})
 
-			let result = new Result(true, true)
+			const result = new Result(true, true)
 			result.set(expectedNonRecursive)
 			result.report(new JUnitReporter(false))
 
-			unhook_intercept();
+			unhook_intercept()
 
 			result.report(new JUnitReporter())
 
-			let lines = log.split(/\r?\n/)
+			const lines = log.split(/\r?\n/)
 
 			for (const [expectedURL, expectedChecks] of expectedNonRecursive) {
 				assert(lines.find(l => l.includes("testsuite") && l.includes(expectedURL)))
@@ -235,7 +242,7 @@ describe("process mock URL", function () {
 })
 
 describe("process real URL", async () => {
-	let config = new Config()
+	const config = new Config()
 	config.disablePrint = true
 	const inspector = new Inspector(
 		new URLsMatchingSet(),
@@ -248,29 +255,29 @@ describe("process real URL", async () => {
 describe("result", () => {
 
 	it("ignores skipped", () => {
-		let result = new Result(true, true)
+		const result = new Result(true, true)
 		result.add({ status: CheckStatus.Skipped, url: "skip" })
 		result.add(new ResultItem())
 		assert(result.count() == 1)
 	})
 
 	it("print progress", () => {
-		let result = new Result(true, false)
+		const result = new Result(true, false)
 
-		let log: string = ""
-		let unhook_intercept = intercept(line => {
+		let log = ""
+		const unhook_intercept = intercept(line => {
 			log += line
 			return ""
-		});
+		})
 
 		result.add({ status: CheckStatus.GenericError, url: "" })
 		for (let index = 0; index < 120; index++) {
 			result.add({ status: CheckStatus.OK, url: `${index}` })
 		}
 
-		unhook_intercept();
+		unhook_intercept()
 
-		let lines = log.split(/\r?\n/)
+		const lines = log.split(/\r?\n/)
 
 		assert(result.count() == 121)
 		assert(lines.length == 2)

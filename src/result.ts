@@ -8,7 +8,7 @@ export class Result {
 
 	constructor(readonly ignoreSkipped: boolean, readonly disablePrint: boolean) { }
 
-	public add(completedCheck: ResultItem, parent: string = "original request") {
+	public add(completedCheck: ResultItem, parent = "original request"): void {
 		if (completedCheck.status == CheckStatus.Skipped && this.ignoreSkipped) {
 			return
 		}
@@ -22,6 +22,7 @@ export class Result {
 		}
 
 		if (this.pages.has(parent)) {
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			this.pages.get(parent)!.push(completedCheck)
 		} else {
 			this.pages.set(parent, [completedCheck])
@@ -49,15 +50,15 @@ export class Result {
 		return count
 	}
 
-	public report<ReporterT extends IReporter>(reporter: ReporterT): any {
+	public report<ReporterT extends IReporter>(reporter: ReporterT): unknown {
 		return reporter.process(this.pages)
 	}
 
-	public success() {
+	public success(): boolean {
 		return !this.atLeastOneBroken
 	}
 
-	public set(pages: Map<string, ResultItem[]>) {
+	public set(pages: Map<string, ResultItem[]>): void {
 		this.pages = pages
 	}
 }

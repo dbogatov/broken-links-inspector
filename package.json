@@ -1,6 +1,6 @@
 {
 	"name": "broken-links-inspector",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"description": "Extract and recursively check all URLs reporting broken ones",
 	"main": "dist/inspector.js",
 	"types": "dist/inspector.d.ts",
@@ -59,7 +59,10 @@
 		"@types/chai": "^4.2.11",
 		"@types/mocha": "^7.0.2",
 		"@types/sinon": "^9.0.4",
+		"@typescript-eslint/eslint-plugin": "^3.4.0",
+		"@typescript-eslint/parser": "^3.4.0",
 		"chai": "^4.2.0",
+		"eslint": "^7.3.1",
 		"mocha": "^8.0.1",
 		"mocha-junit-reporter": "^2.0.0",
 		"nyc": "^15.1.0",
