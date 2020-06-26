@@ -1,6 +1,6 @@
 {
 	"name": "broken-links-inspector",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "Extract and recursively check all URLs reporting broken ones",
 	"main": "dist/inspector.js",
 	"types": "dist/inspector.d.ts",
