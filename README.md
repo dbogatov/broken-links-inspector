@@ -44,11 +44,12 @@ Options:
 
 Example:
 ```
-$bli inspect https://dbogatov.org -r -t 2000 -s linkedin --reporters console
+$ bli inspect https://dbogatov.org -r -t 2000 -s linkedin --reporters console
 ```
 
 <details>
 	<summary>See output</summary>
+
 ```
 ................................................................................
 ................................................................................
@@ -142,6 +143,7 @@ https://dbogatov.org/contact
 	OK: 0, skipped: 23, broken: 0
 OK: 73, skipped: 111, broken: 0
 ```
+
 </details>
 
 Return code: 1 if at least one broken link detected, 0 otherwise.
