@@ -1,6 +1,6 @@
 {
 	"name": "broken-links-inspector",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Extract and recursively check all URLs reporting broken ones",
 	"main": "dist/inspector.js",
 	"types": "dist/inspector.d.ts",
@@ -28,7 +28,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://git.dbogatov.org/dbogatov/broken-links-inspector.git"
+		"url": "https://github.com/dbogatov/broken-links-inspector.git"
 	},
 	"keywords": [
 		"404",
