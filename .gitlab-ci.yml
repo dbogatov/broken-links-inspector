@@ -13,6 +13,7 @@ lint:
   script:
     - npm install
     - npm run lint
+  allow_failure: true
 
 test:
   stage: test
@@ -93,7 +94,8 @@ nodejs-scan-sast:
   stage: security
   before_script:
     - npm install
-    - npm build
+    - npm run build
+    - ls
 
 license_scanning:
   stage: security
