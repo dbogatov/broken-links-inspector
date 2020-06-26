@@ -4,21 +4,35 @@ default:
     - docker
 
 stages:
+  - build
   - test
   - security
   - release
 
-lint:
-  stage: test
+build:
+  stage: build
   script:
     - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - node_modules
+      - dist
+    expire_in: 1 hour
+
+lint:
+  stage: test
+  dependencies:
+    - build
+  script:
     - npm run lint
   allow_failure: true
 
 test:
   stage: test
+  dependencies:
+    - build
   script:
-    - npm install
     - npm run coverage
   coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
   artifacts:
@@ -31,6 +45,8 @@ test:
 
 release:
   stage: release
+  dependencies:
+    - build
   script:
     - |
       cat <<EOT >> .npmrc
@@ -51,8 +67,6 @@ release:
         echo "This version has already been published"
         exit 0
       fi
-    - npm install
-    - npm run build
     - sed -i "s#\"$PACKAGE\"#\"@dbogatov/$PACKAGE\"#g" package.json
     - npm publish
     - |
@@ -68,6 +82,7 @@ release:
 
 code_navigation:
   stage: release
+  dependencies: []
   script:
     - npm install -g @sourcegraph/lsif-tsc
     - apk add --update git
@@ -87,34 +102,30 @@ include:
 
 # ADJUSTMENTS
 
-gemnasium-dependency_scanning:
-  dependencies: []
+.security-template: &security-def
+  dependencies:
+    - build
   stage: security
 
+gemnasium-dependency_scanning:
+  <<: *security-def
+
 nodejs-scan-sast:
-  stage: security
-  dependencies: []
+  <<: *security-def
   before_script:
-    - npm install
-    - npm run build
     - ls
 
 license_scanning:
-  dependencies: []
-  stage: security
+  <<: *security-def
 
 retire-js-dependency_scanning:
-  dependencies: []
-  stage: security
+  <<: *security-def
 
 secret_detection:
-  dependencies: []
-  stage: security
+  <<: *security-def
 
 secrets-sast:
-  dependencies: []
-  stage: security
+  <<: *security-def
 
 tslint-sast:
-  dependencies: []
-  stage: security
+  <<: *security-def
