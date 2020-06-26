@@ -20,32 +20,14 @@ Features:
 - JUnit report is best used with CI (tested with [GitLab](https://docs.gitlab.com/ee/ci/junit_test_reports.html))
 - need a feature, [go to issues](https://github.com/dbogatov/broken-links-inspector/issues)
 
-## How to use
+## How to install and run
 
 ```
-$ bli inspect -h
+npm i -g broken-links-inspector
 
-Usage: index inspect [options] <url>
-
-Check links in the given URL
-
-Options:
-  -r, --recursive                             recursively check all links in all URLs within supplied host (default: false)
-  -t, --timeout <number>                      timeout in ms after which the link will be considered broken (default: 2000)
-  -g, --get                                   use GET request instead of HEAD (default: false)
-  -s, --skip <globs>                          URLs to skip defined by globs, like '*linkedin*' (default: [])
-  --reporters <coma-separated-strings>        Reporters to use in processing the results (junit, console) (default: ["console"])
-  --ignore-prefixes <coma-separated-strings>  prefix(es) to ignore (without ':'), like mailto: and tel: (default: ["javascript","data","mailto","sms","tel","geo"])
-  --accept-codes <coma-separated-numbers>     HTTP response code(s) (beyond 200-299) to accept, like 999 for linkedin (default: [999])
-  --ignore-skipped                            Do not report skipped URLs (default: false)
-  -v, --verbose                               log progress of checking URLs (default: false)
-  -h, --help                                  display help for command
+bli inspect https://dbogatov.org -r -t 2000 -s linkedin --reporters console
 ```
 
-Example:
-```
-$ bli inspect https://dbogatov.org -r -t 2000 -s linkedin --reporters console
-```
 
 <details>
 	<summary>See output</summary>
@@ -146,7 +128,29 @@ OK: 73, skipped: 111, broken: 0
 
 </details>
 
-Return code: 1 if at least one broken link detected, 0 otherwise.
+## How to use
+
+```
+$ bli inspect -h
+
+Usage: index inspect [options] <url>
+
+Check links in the given URL
+
+Options:
+  -r, --recursive                             recursively check all links in all URLs within supplied host (default: false)
+  -t, --timeout <number>                      timeout in ms after which the link will be considered broken (default: 2000)
+  -g, --get                                   use GET request instead of HEAD (default: false)
+  -s, --skip <globs>                          URLs to skip defined by globs, like '*linkedin*' (default: [])
+  --reporters <coma-separated-strings>        Reporters to use in processing the results (junit, console) (default: ["console"])
+  --ignore-prefixes <coma-separated-strings>  prefix(es) to ignore (without ':'), like mailto: and tel: (default: ["javascript","data","mailto","sms","tel","geo"])
+  --accept-codes <coma-separated-numbers>     HTTP response code(s) (beyond 200-299) to accept, like 999 for linkedin (default: [999])
+  --ignore-skipped                            Do not report skipped URLs (default: false)
+  -v, --verbose                               log progress of checking URLs (default: false)
+  -h, --help                                  display help for command
+```
+
+**Return code** is 1 if at least one broken link detected, 0 otherwise.
 
 `-r, --recursive` will instruct inspector to keep checking all URLs in the original domain.
 Very useful for checking an entire website, such as personal blog.
