@@ -50,7 +50,7 @@ export class AxiosHttpClient implements IHttpClient {
 			} else if (!error.response) {
 				throw new HttpClientFailure(false, -1)
 			} else {
-				if (this.acceptedCodes.some(code => code == error.response?.status)) {
+				if (this.acceptedCodes.some(code => code == error.response!.status)) {
 					return ""
 				} else {
 					throw new HttpClientFailure(false, error.response.status)

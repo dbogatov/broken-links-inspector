@@ -219,7 +219,7 @@ describe("process mock URL", function () {
 
 			unhook_intercept();
 
-			result.report(new JUnitReporter(true))
+			result.report(new JUnitReporter())
 
 			let lines = log.split(/\r?\n/)
 

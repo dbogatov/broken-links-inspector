@@ -22,7 +22,7 @@ export class Result {
 		}
 
 		if (this.pages.has(parent)) {
-			this.pages.get(parent)?.push(completedCheck)
+			this.pages.get(parent)!.push(completedCheck)
 		} else {
 			this.pages.set(parent, [completedCheck])
 		}
