@@ -103,8 +103,7 @@ include:
 # ADJUSTMENTS
 
 .security-template: &security-def
-  dependencies:
-    - build
+  dependencies: []
   stage: security
 
 gemnasium-dependency_scanning:
