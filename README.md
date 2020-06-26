@@ -137,6 +137,8 @@ Usage: index inspect [options] <url>
 
 Check links in the given URL
 
+Dedicated to Daria Bogatova ♥
+
 Options:
   -r, --recursive                             recursively check all links in all URLs within supplied host (default: false)
   -t, --timeout <number>                      timeout in ms after which the link will be considered broken (default: 2000)
