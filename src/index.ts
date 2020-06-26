@@ -6,7 +6,7 @@ import { Inspector, URLsMatchingSet } from "./inspector"
 import { ConsoleReporter, JUnitReporter } from "./report"
 
 commander
-	.version("1.1.4")
+	.version("1.1.5")
 	.description("Extract and recursively check all URLs reporting broken ones\n\nDedicated to Daria Bogatova \u2665")
 
 commander

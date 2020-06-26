@@ -145,7 +145,7 @@ export class JUnitReporter implements IReporter {
 export class ConsoleReporter implements IReporter {
 
 	private printTotals(oks: number, skipped: number, broken: number, indent = true) {
-		console.log(`${indent ? "\t" : ""}${chalk.green(`OK: ${oks}`)}, ${chalk.grey(`skipped: ${skipped}`)}, ${chalk.red(`broken: ${broken}`)}`)
+		console.log(`${indent ? "\t" : ""}${chalk.green(`OK: ${oks}`)}, ${chalk.dim(`skipped: ${skipped}`)}, ${chalk.red(`broken: ${broken}`)}`)
 	}
 
 	private printCheck(check: ResultItem) {
@@ -169,7 +169,7 @@ export class ConsoleReporter implements IReporter {
 		}
 
 		if (check.status != CheckStatus.Skipped) {
-			console.log(`\t${statusLabel} : ${chalk.italic(check.url)} ${check.message ? `(${chalk.italic.grey(check.message)})` : ""}`)
+			console.log(`\t${statusLabel} : ${chalk(check.url)} ${check.message ? `(${chalk.dim(check.message)})` : ""}`)
 		}
 	}
 
