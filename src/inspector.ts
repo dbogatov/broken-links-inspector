@@ -3,16 +3,27 @@ import axios, { AxiosError } from "axios"
 import { Result, CheckStatus } from "./result";
 import { isMatch } from "matcher"
 
-export class Inspector {
+export interface IHttpClient {
+	request(get: boolean, url: string): Promise<string>
+}
+
+export class HttpClientFailure {
+	constructor(
+		readonly timeout: boolean,
+		readonly code: number
+	) { }
+}
+
+export class AxiosHttpClient implements IHttpClient {
 
 	constructor(
-		private readonly matcher: URLsMatchingSet,
-		private readonly config: Config
+		readonly timeout: number,
+		readonly acceptedCodes: number[]
 	) { }
 
-	async timeout<T>(timeoutMs: number, promise: () => Promise<T>, failureMessage: string = "timeout"): Promise<T> {
+	private async timeoutWrapper<T>(timeoutMs: number, promise: () => Promise<T>, failureMessage: string = "timeout"): Promise<T> {
 		let timeoutHandle: NodeJS.Timeout | undefined
-		const timeoutPromise = new Promise<never>((resolve, reject) => {
+		const timeoutPromise = new Promise<never>((_, reject) => {
 			timeoutHandle = setTimeout(() => reject(new Error(failureMessage)), timeoutMs)
 		})
 
@@ -24,16 +35,53 @@ export class Inspector {
 		return result;
 	}
 
+	async request(get: boolean, url: string): Promise<string> {
+
+		const instance = axios.create()
+
+		try {
+			return (await this.timeoutWrapper(this.timeout, () => get ? instance.get(url) : instance.head(url))).data as string
+		} catch (exception) {
+
+			const error: AxiosError = exception;
+
+			if ((exception.message as string).includes("timeout")) {
+				throw new HttpClientFailure(true, -1)
+			} else if (!error.response) {
+				throw new HttpClientFailure(false, -1)
+			} else {
+				if (this.acceptedCodes.some(code => code == error.response?.status)) {
+					return ""
+				} else {
+					throw new HttpClientFailure(false, error.response.status)
+				}
+			}
+		}
+	}
+}
+
+export class Inspector {
+
+	constructor(
+		private readonly matcher: URLsMatchingSet,
+		private readonly config: Config,
+		private readonly httpClient: IHttpClient = new AxiosHttpClient(config.timeout, config.acceptedCodes)
+	) { }
+
 	async processURL(originalUrl: URL, recursive: boolean): Promise<Result> {
 
-		let result = new Result(this.config.ignoreSkipped);
+		let result = new Result(this.config.ignoreSkipped, this.config.disablePrint);
 		// [url, GET, parent?]
 		let urlsToCheck: [string, boolean, string?][] = [[originalUrl.href, true, undefined]]
 
 		let processingRoutine = async (url: string, useGet: boolean, parent?: string) => {
 
 			try {
-				url = parent ? new URL(url, parent).href : new URL(url).href
+				try {
+					url = new URL(url).href
+				} catch (_) {
+					url = new URL(url, parent).href
+				}
 				if (url.includes("#")) {
 					url = url.split("#")[0]
 				}
@@ -48,12 +96,7 @@ export class Inspector {
 				} else {
 					let urlToCheck = parent ? new URL(url, parent).href : url
 
-					const instance = axios.create()
-					const response = useGet || shouldParse ?
-						await this.timeout(this.config.timeout, () => instance.get(urlToCheck)) :
-						await this.timeout(this.config.timeout, () => instance.head(urlToCheck))
-
-					let html = response.data as string
+					let html = await this.httpClient.request(useGet || shouldParse, urlToCheck)
 
 					if (shouldParse) {
 
@@ -68,27 +111,21 @@ export class Inspector {
 				}
 
 			} catch (exception) {
-				const error: AxiosError = exception;
+				const error: HttpClientFailure = exception;
 
 				// if HEAD was used, retry with GET
 				if (!useGet) {
 					urlsToCheck.push([url, true, parent])
 				} else {
-					if ((exception.message as string).includes("timeout")) {
+					if (error.timeout) {
 						result.add({ url: url, status: CheckStatus.Timeout }, parent)
-					} else if (!error.response) {
-						result.add({ url: url, status: CheckStatus.GenericError }, parent)
+					} else if (error.code > -1) {
+						result.add({ url: url, status: CheckStatus.NonSuccessCode, message: `${error.code}` }, parent)
 					} else {
-						if (this.config.acceptedCodes.some(code => code == error.response?.status)) {
-							result.add({ url: url, status: CheckStatus.OK }, parent)
-						} else {
-							result.add({ url: url, status: CheckStatus.NonSuccessCode, message: `${error.response.status}` }, parent)
-						}
+						result.add({ url: url, status: CheckStatus.GenericError }, parent)
 					}
 				}
-
 			}
-
 		}
 
 		let promises: Promise<void>[] = []
@@ -123,7 +160,7 @@ export class Inspector {
 				}
 			},
 			{ decodeEntities: true }
-		);
+		)
 		parserInstance.write(html)
 		parserInstance.end()
 
@@ -140,6 +177,7 @@ export class Config {
 	verbose: boolean = false
 	get: boolean = false
 	ignoreSkipped: boolean = false
+	disablePrint: boolean = false
 }
 
 export enum URLMatchingRule {

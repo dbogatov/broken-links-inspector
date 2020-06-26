@@ -6,18 +6,20 @@ export class Result {
 	private addedCount = 0
 	private atLeastOneBroken = false
 
-	constructor(readonly ignoreSkipped: boolean) { }
+	constructor(readonly ignoreSkipped: boolean, readonly disablePrint: boolean) { }
 
 	public add(completedCheck: ResultItem, parent: string = "original request") {
 		if (completedCheck.status == CheckStatus.Skipped && this.ignoreSkipped) {
 			return
 		}
 
-		if (this.addedCount > 0 && this.addedCount % 80 == 0) {
-			process.stdout.write("\n")
+		if (!this.disablePrint) {
+			if (this.addedCount > 0 && this.addedCount % 80 == 0) {
+				process.stdout.write("\n")
+			}
+			process.stdout.write(completedCheck.status == CheckStatus.OK || completedCheck.status == CheckStatus.Skipped ? "." : "x")
+			this.addedCount++
 		}
-		process.stdout.write(completedCheck.status == CheckStatus.OK || completedCheck.status == CheckStatus.Skipped ? "." : "x")
-		this.addedCount++
 
 		if (this.pages.has(parent)) {
 			this.pages.get(parent)?.push(completedCheck)
@@ -47,12 +49,16 @@ export class Result {
 		return count
 	}
 
-	public report<ReporterT extends IReporter>(reporter: ReporterT): void {
-		reporter.process(this.pages)
+	public report<ReporterT extends IReporter>(reporter: ReporterT): any {
+		return reporter.process(this.pages)
 	}
 
 	public success() {
 		return !this.atLeastOneBroken
+	}
+
+	public set(pages: Map<string, ResultItem[]>) {
+		this.pages = pages
 	}
 }
 

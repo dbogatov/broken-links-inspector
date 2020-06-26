@@ -2,7 +2,7 @@
 
 import commander from "commander"
 import chalk from "chalk"
-import { Inspector, URLsMatchingSet, Config } from "./inspector"
+import { Inspector, URLsMatchingSet } from "./inspector"
 import { ConsoleReporter, JUnitReporter } from "./report"
 
 commander
@@ -37,7 +37,8 @@ commander
 			skipURLs: inspectObj.skip as string[],
 			verbose: inspectObj.verbose as boolean,
 			get: inspectObj.get as boolean,
-			ignoreSkipped: inspectObj.ignoreSkipped as boolean
+			ignoreSkipped: inspectObj.ignoreSkipped as boolean,
+			disablePrint: false
 		})
 
 		let result = await inspector.processURL(new URL(url), inspectObj.recursive as boolean)

@@ -1,11 +1,10 @@
 import { ResultItem, CheckStatus } from "./result"
 import chalk from "chalk"
 import { parse } from "js2xmlparser"
-
 import fs from "fs";
 
 export interface IReporter {
-	process(pages: Map<string, ResultItem[]>): void
+	process(pages: Map<string, ResultItem[]>): any
 }
 
 /**

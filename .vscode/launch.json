@@ -26,19 +26,15 @@
 			"args": [
 				"inspect",
 				"https://dbogatov.org",
-				"-r",
-				"-t",
-				"100",
-				"--ignore-prefixes",
-				"m,l",
-				"--accept-codes",
-				"444,555"
+				"-r"
 			],
 			"console": "integratedTerminal",
 			"internalConsoleOptions": "neverOpen",
 			"protocol": "inspector",
 			"preLaunchTask": "build",
-			"outFiles": ["${workspaceFolder}/dist/**/*.js"]
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			]
 		}
 	]
 }
