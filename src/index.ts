@@ -7,7 +7,7 @@ import { ConsoleReporter, JUnitReporter } from "./report"
 
 commander
 	.version("1.1.2")
-	.description("Extract and recursively check all URLs reporting broken ones")
+	.description("Extract and recursively check all URLs reporting broken ones\n\nDedicated to Daria Bogatova")
 
 commander
 	.command("inspect <url>")

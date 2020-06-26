@@ -88,26 +88,33 @@ include:
 # ADJUSTMENTS
 
 gemnasium-dependency_scanning:
+  dependencies: []
   stage: security
 
 nodejs-scan-sast:
   stage: security
+  dependencies: []
   before_script:
     - npm install
     - npm run build
     - ls
 
 license_scanning:
+  dependencies: []
   stage: security
 
 retire-js-dependency_scanning:
+  dependencies: []
   stage: security
 
 secret_detection:
+  dependencies: []
   stage: security
 
 secrets-sast:
+  dependencies: []
   stage: security
 
 tslint-sast:
+  dependencies: []
   stage: security
