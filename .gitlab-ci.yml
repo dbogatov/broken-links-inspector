@@ -113,7 +113,10 @@ gemnasium-dependency_scanning:
 nodejs-scan-sast:
   <<: *security-def
   before_script:
-    - ls
+    - ls -la
+    - chmod -R a+rwx ./dist
+    - ls -la
+    - ls -la ./dist
 
 license_scanning:
   <<: *security-def

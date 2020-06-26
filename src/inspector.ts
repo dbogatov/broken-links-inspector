@@ -31,9 +31,8 @@ export class AxiosHttpClient implements IHttpClient {
 			promise(),
 			timeoutPromise
 		])
-		if (timeoutHandle) {
-			clearTimeout(timeoutHandle)
-		}
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		clearTimeout(timeoutHandle!)
 		return result
 	}
 
