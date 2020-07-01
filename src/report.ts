@@ -114,6 +114,7 @@ export class JUnitReporter implements IReporter {
 						skipped++
 						break
 					case CheckStatus.OK:
+					case CheckStatus.Retried:
 						oks++
 						break
 				}
@@ -156,6 +157,9 @@ export class ConsoleReporter implements IReporter {
 			case CheckStatus.OK:
 				statusLabel = chalk.green("OK".padEnd(labelWidth))
 				break
+			case CheckStatus.Retried:
+				statusLabel = chalk.magenta("RETRIED".padEnd(labelWidth))
+				break
 			case CheckStatus.Skipped:
 				statusLabel = chalk.gray("SKIP".padEnd(labelWidth))
 				break
@@ -189,6 +193,7 @@ export class ConsoleReporter implements IReporter {
 			for (const check of page[1]) {
 				switch (check.status) {
 					case CheckStatus.OK:
+					case CheckStatus.Retried:
 						oks++
 						break
 					case CheckStatus.NonSuccessCode:

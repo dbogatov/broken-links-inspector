@@ -2,6 +2,7 @@ import * as parser from "htmlparser2"
 import axios, { AxiosError } from "axios"
 import { Result, CheckStatus } from "./result"
 import { isMatch } from "matcher"
+import pluralize from "pluralize"
 
 export interface IHttpClient {
 	request(get: boolean, url: string): Promise<string>
@@ -73,10 +74,10 @@ export class Inspector {
 	async processURL(originalUrl: URL, recursive: boolean): Promise<Result> {
 
 		const result = new Result(this.config.ignoreSkipped, this.config.disablePrint)
-		// [url, GET, parent?]
-		const urlsToCheck: [string, boolean, string?][] = [[originalUrl.href, true, undefined]]
+		// [url, GET, attempts, parent?]
+		const urlsToCheck: [string, boolean, number, string?][] = [[originalUrl.href, true, 0, undefined]]
 
-		const processingRoutine = async (url: string, useGet: boolean, parent?: string) => {
+		const processingRoutine = async (url: string, useGet: boolean, attempts: number, parent?: string) => {
 
 			try {
 				try {
@@ -105,11 +106,15 @@ export class Inspector {
 						const discoveredURLs = this.extractURLs(html)
 
 						for (const discovered of discoveredURLs) {
-							urlsToCheck.push([discovered, this.config.get, url])
+							urlsToCheck.push([discovered, this.config.get, 0, url])
 						}
 					}
 
-					result.add({ url: url, status: CheckStatus.OK }, parent)
+					if (attempts == 0) {
+						result.add({ url: url, status: CheckStatus.OK }, parent)
+					} else {
+						result.add({ url: url, status: CheckStatus.Retried, message: `${attempts} ${pluralize("retry", attempts)}` }, parent)
+					}
 				}
 
 			} catch (exception) {
@@ -117,10 +122,15 @@ export class Inspector {
 
 				// if HEAD was used, retry with GET
 				if (!useGet) {
-					urlsToCheck.push([url, true, parent])
+					urlsToCheck.push([url, true, attempts, parent])
 				} else {
 					if (error.timeout) {
-						result.add({ url: url, status: CheckStatus.Timeout }, parent)
+						// retry if attempts left
+						if (attempts < this.config.retries) {
+							urlsToCheck.push([url, useGet, attempts + 1, parent])
+						} else {
+							result.add({ url: url, status: CheckStatus.Timeout }, parent)
+						}
 					} else if (error.code > -1) {
 						result.add({ url: url, status: CheckStatus.NonSuccessCode, message: `${error.code}` }, parent)
 					} else {
@@ -135,9 +145,9 @@ export class Inspector {
 		while (urlsToCheck.length > 0) {
 
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			const [url, useGet, parent] = urlsToCheck.pop()!
+			const [url, useGet, attempts, parent] = urlsToCheck.pop()!
 
-			promises.push(processingRoutine(url, useGet, parent))
+			promises.push(processingRoutine(url, useGet, attempts, parent))
 
 			if (urlsToCheck.length == 0) {
 				await Promise.all(promises)
@@ -181,6 +191,7 @@ export class Config {
 	get = false
 	ignoreSkipped = false
 	disablePrint = false
+	retries = 3
 }
 
 export enum URLMatchingRule {

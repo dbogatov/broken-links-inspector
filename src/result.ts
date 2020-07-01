@@ -17,7 +17,7 @@ export class Result {
 			if (this.addedCount > 0 && this.addedCount % 80 == 0) {
 				process.stdout.write("\n")
 			}
-			process.stdout.write(completedCheck.status == CheckStatus.OK || completedCheck.status == CheckStatus.Skipped ? "." : "x")
+			process.stdout.write(isStatusFailure(completedCheck.status) ? "x" : ".")
 			this.addedCount++
 		}
 
@@ -29,11 +29,7 @@ export class Result {
 		}
 		this.checkedUrls.add(completedCheck.url)
 
-		if (
-			completedCheck.status == CheckStatus.GenericError ||
-			completedCheck.status == CheckStatus.Timeout ||
-			completedCheck.status == CheckStatus.NonSuccessCode
-		) {
+		if (isStatusFailure(completedCheck.status)) {
 			this.atLeastOneBroken = true
 		}
 	}
@@ -72,7 +68,15 @@ export class ResultItem {
 export enum CheckStatus {
 	OK = "OK",
 	Skipped = "SKIP",
+	Retried = "RETRIED",
 	Timeout = "TIMEOUT",
 	NonSuccessCode = "ERROR CODE",
 	GenericError = "UNKNOWN"
+}
+
+export function isStatusFailure(status: CheckStatus): boolean {
+	return false ||
+		status == CheckStatus.GenericError ||
+		status == CheckStatus.Timeout ||
+		status == CheckStatus.NonSuccessCode
 }
