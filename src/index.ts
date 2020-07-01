@@ -17,6 +17,7 @@ commander
 	.option("-g, --get", "use GET request instead of HEAD", false)
 	.option("-s, --skip <globs>", "URLs to skip defined by globs, like '*linkedin*'", (value: string, previous: string[]) => previous.concat([value]), [])
 	.option("--reporters <coma-separated-strings>", "Reporters to use in processing the results (junit, console)", (value: string, _) => value.split(","), ["console"])
+	.option("--retries <number>", "The number of times to retry TIMEOUT URLs", (value: string, _) => parseInt(value), 3)
 	.option("--ignore-prefixes <coma-separated-strings>", "prefix(es) to ignore (without ':'), like mailto: and tel:", (value: string, _) => value.split(","), ["javascript", "data", "mailto", "sms", "tel", "geo"])
 	.option("--accept-codes <coma-separated-numbers>", "HTTP response code(s) (beyond 200-299) to accept, like 999 for linkedin", (value: string, _) => value.split(",").map(code => parseInt(code)), [999])
 	.option("--ignore-skipped", "Do not report skipped URLs", false)
@@ -38,7 +39,8 @@ commander
 			verbose: inspectObj.verbose as boolean,
 			get: inspectObj.get as boolean,
 			ignoreSkipped: inspectObj.ignoreSkipped as boolean,
-			disablePrint: false
+			disablePrint: false,
+			retries: inspectObj.retries as number
 		})
 
 		const result = await inspector.processURL(new URL(url), inspectObj.recursive as boolean)

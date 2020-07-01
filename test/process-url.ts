@@ -7,12 +7,29 @@ import intercept from "intercept-stdout"
 
 class MockHttpClient implements IHttpClient {
 
-	// Map<url, [response, timeout, failure, code]>
-	constructor(readonly map: Map<string, [string[], boolean, boolean, number]>) { }
+	private attemptsMap = new Map<string, number>()
+
+	// Map<url, [response, timeout, failure, code, retries]>
+	constructor(readonly map: Map<string, [string[], boolean, boolean, number, number]>) { }
 
 	async request(get: boolean, url: string): Promise<string> {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		const [urls, timeout, failure, code] = this.map.get(url)!
+		const [urls, timeout, failure, code, retries] = this.map.get(url)!
+
+		if (retries > 0) {
+			if (this.attemptsMap.has(url)) {
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				if (this.attemptsMap.get(url)! < retries) {
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+					this.attemptsMap.set(url, this.attemptsMap.get(url)! + 1)
+					throw new HttpClientFailure(true, -1)
+				}
+			} else {
+				this.attemptsMap.set(url, 0)
+				throw new HttpClientFailure(true, -1)
+			}
+		}
+
 		if (timeout) {
 			throw new HttpClientFailure(true, -1)
 		} else if (failure) {
@@ -55,7 +72,7 @@ function assertEqualResults(expected: Map<string, ResultItem[]>, actual: Map<str
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			assert(expectedCheck.status == actualCheck!.status)
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			assert(expectedCheck.message == actualCheck!.message)
+			assert(actualCheck!.message ? actualCheck!.message!.includes(expectedCheck.message!) : !expectedCheck.message)
 		}
 	}
 
@@ -64,25 +81,28 @@ function assertEqualResults(expected: Map<string, ResultItem[]>, actual: Map<str
 const original = "original.com"
 const external = "external.com"
 
-const map = new Map<string, [string[], boolean, boolean, number]>([
+// url -> [urls, timeout, failure, code, retries]
+const map = new Map<string, [string[], boolean, boolean, number, number]>([
 	[toURL(original), [
 		[
 			`${original}/success`,
 			`${original}/not-found#anchor`,
 			`${original}/timeout`,
 			`${original}/failure`,
+			`${original}/retried`,
 			`${external}/1`,
 			`${external}/to-skip`,
 			original
-		], false, false, -1]
+		], false, false, -1, 0]
 	],
-	[toURL(original, "success"), [[`${original}/recursive`, `${external}/2`], false, false, -1]],
-	[toURL(original, "not-found"), [[], false, false, 404]],
-	[toURL(original, "timeout"), [[], true, false, -1]],
-	[toURL(original, "failure"), [[], false, true, -1]],
-	[toURL(original, "recursive"), [[], false, false, -1]],
-	[toURL(external, "1"), [[], false, false, -1]],
-	[toURL(external, "2"), [[], false, false, -1]]
+	[toURL(original, "success"), [[`${original}/recursive`, `${external}/2`], false, false, -1, 0]],
+	[toURL(original, "not-found"), [[], false, false, 404, 0]],
+	[toURL(original, "timeout"), [[], true, false, -1, 0]],
+	[toURL(original, "failure"), [[], false, true, -1, 0]],
+	[toURL(original, "retried"), [[], false, false, -1, 2]],
+	[toURL(original, "recursive"), [[], false, false, -1, 0]],
+	[toURL(external, "1"), [[], false, false, -1, 0]],
+	[toURL(external, "2"), [[], false, false, -1, 0]]
 ])
 const expectedNonRecursive = new Map<string, ResultItem[]>([
 	["original request", [{ url: toURL(original), status: CheckStatus.OK }]],
@@ -91,6 +111,7 @@ const expectedNonRecursive = new Map<string, ResultItem[]>([
 		{ url: toURL(original, "not-found"), status: CheckStatus.NonSuccessCode, message: `${404}` },
 		{ url: toURL(original, "timeout"), status: CheckStatus.Timeout },
 		{ url: toURL(original, "failure"), status: CheckStatus.GenericError },
+		{ url: toURL(original, "retried"), status: CheckStatus.Retried, message: `${2}` },
 		{ url: toURL(original), status: CheckStatus.Skipped },
 		{ url: toURL(external, "1"), status: CheckStatus.OK },
 		{ url: toURL(external, "to-skip"), status: CheckStatus.Skipped }
@@ -123,7 +144,7 @@ describe("Axios web server", async () => {
 
 	it("generic", async () => {
 		try {
-			await new AxiosHttpClient(1000, []).request(false, "bad-url")
+			await new AxiosHttpClient(1000, []).request(true, "ftp://bad-url-54234534.com")
 		} catch (exception) {
 			const error: HttpClientFailure = exception
 			assert(!error.timeout)
@@ -135,9 +156,9 @@ describe("Axios web server", async () => {
 
 describe("process mock URL", function () {
 
-	const httpClient = new MockHttpClient(map);
-
 	([true, false] as boolean[]).forEach(recursive => {
+
+		const httpClient = new MockHttpClient(map)
 
 		it(`processes ${recursive ? "" : "non-"}recursive`, async () => {
 			const config = new Config()

@@ -48,13 +48,15 @@
 	"dependencies": {
 		"@types/intercept-stdout": "^0.1.0",
 		"@types/node": "^14.0.13",
+		"@types/pluralize": "0.0.29",
 		"axios": "^0.19.2",
 		"chalk": "^4.1.0",
 		"commander": "^5.1.0",
 		"htmlparser2": "^4.1.0",
 		"intercept-stdout": "^0.1.2",
 		"js2xmlparser": "^4.0.1",
-		"matcher": "^3.0.0"
+		"matcher": "^3.0.0",
+		"pluralize": "^8.0.0"
 	},
 	"devDependencies": {
 		"@types/chai": "^4.2.11",
