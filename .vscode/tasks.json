@@ -4,8 +4,11 @@
 		{
 			"label": "build",
 			"type": "shell",
-			"command": "tsc",
-			"args": [],
+			"command": "npm",
+			"args": [
+				"run",
+				"build"
+			],
 			"options": {
 				"cwd": "${workspaceFolder}"
 			},
