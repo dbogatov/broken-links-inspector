@@ -26,6 +26,10 @@ Features:
 npm i -g broken-links-inspector
 
 bli inspect https://dbogatov.org -r -t 2000 -s linkedin --reporters console
+
+# or
+# bli inspect file://links.txt
+# with a URL per line in a file links.txt
 ```
 
 
@@ -133,21 +137,21 @@ OK: 73, skipped: 111, broken: 0
 ```
 $ bli inspect -h
 
-Usage: index inspect [options] <url>
+Usage: index inspect [options] <url> <file://>
 
-Check links in the given URL
-
-Dedicated to Daria Bogatova ♥
+Check links in the given URL or a text file
 
 Options:
-  -r, --recursive                             recursively check all links in all URLs within supplied host (default: false)
+  -r, --recursive                             recursively check all links in all URLs within supplied host (ignored for file://) (default: false)
   -t, --timeout <number>                      timeout in ms after which the link will be considered broken (default: 2000)
   -g, --get                                   use GET request instead of HEAD (default: false)
   -s, --skip <globs>                          URLs to skip defined by globs, like '*linkedin*' (default: [])
   --reporters <coma-separated-strings>        Reporters to use in processing the results (junit, console) (default: ["console"])
+  --retries <number>                          The number of times to retry TIMEOUT URLs (default: 3)
   --ignore-prefixes <coma-separated-strings>  prefix(es) to ignore (without ':'), like mailto: and tel: (default: ["javascript","data","mailto","sms","tel","geo"])
   --accept-codes <coma-separated-numbers>     HTTP response code(s) (beyond 200-299) to accept, like 999 for linkedin (default: [999])
   --ignore-skipped                            Do not report skipped URLs (default: false)
+  --single-threaded                           Do not enable parallelization (default: false)
   -v, --verbose                               log progress of checking URLs (default: false)
   -h, --help                                  display help for command
 ```
@@ -174,12 +178,16 @@ Currently there are two: `console` and `junit`.
 `junit` will produce `junit-report.xml` file in the current directory.
 JUnit file treats pages as test suites and URLs in a page as test cases.
 
+`--retries` will instruct the number of times to try a URL before declaring it failed.
+
 `--ignore-prefixes <coma-separated-strings>` is a list of prefixes/ schemas to skip, such as `mailto:`.
 Provided list should not include colons.
 
 `--accept-codes <coma-separated-numbers>` is a list of HTTP code to consider successful, like 999 for linkedin.
 
 `--ignore-skipped` excludes skipped URLs from reports.
+
+`--single-threaded` mandates a sequential execution (should be used in for debugging).
 
 `-v, --verbose` currently unused.
 

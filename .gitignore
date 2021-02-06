@@ -5,3 +5,4 @@ coverage
 test-results.xml
 dump.lsif
 junit-report.xml
+test.txt

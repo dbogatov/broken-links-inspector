@@ -4,15 +4,16 @@ import commander from "commander"
 import chalk from "chalk"
 import { Inspector, URLsMatchingSet } from "./inspector"
 import { ConsoleReporter, JUnitReporter } from "./report"
+import fs from "fs/promises"
 
 commander
 	.version("1.2.0")
 	.description("Extract and recursively check all URLs reporting broken ones\n\nDedicated to Daria Bogatova \u2665")
 
 commander
-	.command("inspect <url>")
-	.description("Check links in the given URL")
-	.option("-r, --recursive", "recursively check all links in all URLs within supplied host", false)
+	.command("inspect <url> <file://>")
+	.description("Check links in the given URL or a text file")
+	.option("-r, --recursive", "recursively check all links in all URLs within supplied host (ignored for file://)", false)
 	.option("-t, --timeout <number>", "timeout in ms after which the link will be considered broken", (value: string, _) => parseInt(value), 2000)
 	.option("-g, --get", "use GET request instead of HEAD", false)
 	.option("-s, --skip <globs>", "URLs to skip defined by globs, like '*linkedin*'", (value: string, previous: string[]) => previous.concat([value]), [])
@@ -21,14 +22,35 @@ commander
 	.option("--ignore-prefixes <coma-separated-strings>", "prefix(es) to ignore (without ':'), like mailto: and tel:", (value: string, _) => value.split(","), ["javascript", "data", "mailto", "sms", "tel", "geo"])
 	.option("--accept-codes <coma-separated-numbers>", "HTTP response code(s) (beyond 200-299) to accept, like 999 for linkedin", (value: string, _) => value.split(",").map(code => parseInt(code)), [999])
 	.option("--ignore-skipped", "Do not report skipped URLs", false)
+	.option("--single-threaded", "Do not enable parallelization", false)
 	.option("-v, --verbose", "log progress of checking URLs", false)
 	.action(async (url: string, inspectObj) => {
 
-		try {
-			new URL(url)
-		} catch (e) {
-			console.error(chalk.red(`${url} does not look like valid URL (forgot http(s)?)`))
-			process.exit(1)
+		const urls: URL[] = []
+
+		if (url.startsWith("file://")) {
+
+			const file = await fs.readFile(url.replace("file://", ""), "utf-8")
+
+			for (const line of file.toString().split("\n")) {
+				if (!line.trim()) {
+					continue
+				}
+				try {
+					const url = new URL(line)
+					urls.push(url)
+					console.log(`From file: ${line}`)
+				} catch (e) {
+					console.warn(chalk.yellow(`${line} does not look a like valid URL`))
+				}
+			}
+		} else {
+			try {
+				urls.push(new URL(url))
+			} catch (e) {
+				console.error(chalk.red(`${url} does not look like a valid URL (forgot http(s)?)`))
+				process.exit(1)
+			}
 		}
 
 		const inspector = new Inspector(new URLsMatchingSet(), {
@@ -39,11 +61,16 @@ commander
 			verbose: inspectObj.verbose as boolean,
 			get: inspectObj.get as boolean,
 			ignoreSkipped: inspectObj.ignoreSkipped as boolean,
+			singleThreaded: inspectObj.singleThreaded as boolean,
 			disablePrint: false,
 			retries: inspectObj.retries as number
 		})
 
-		const result = await inspector.processURL(new URL(url), inspectObj.recursive as boolean)
+		if (urls.length == 0) {
+			process.exit(1)
+		}
+
+		const result = await inspector.processURL(urls, urls.length == 1 ? inspectObj.recursive as boolean : false)
 
 		for (const reporter of inspectObj.reporters as string[]) {
 			switch (reporter) {

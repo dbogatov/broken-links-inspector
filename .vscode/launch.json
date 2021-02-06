@@ -25,8 +25,8 @@
 			"program": "${workspaceFolder}/dist/index.js",
 			"args": [
 				"inspect",
-				"https://dbogatov.org",
-				"-r"
+				"--single-threaded",
+				"file://test.txt"
 			],
 			"console": "integratedTerminal",
 			"internalConsoleOptions": "neverOpen",

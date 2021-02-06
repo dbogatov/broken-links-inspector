@@ -71,11 +71,11 @@ export class Inspector {
 		private readonly httpClient: IHttpClient = new AxiosHttpClient(config.timeout, config.acceptedCodes)
 	) { }
 
-	async processURL(originalUrl: URL, recursive: boolean): Promise<Result> {
+	async processURL(originalUrls: URL[], recursive: boolean): Promise<Result> {
 
 		const result = new Result(this.config.ignoreSkipped, this.config.disablePrint)
 		// [url, GET, attempts, parent?]
-		const urlsToCheck: [string, boolean, number, string?][] = [[originalUrl.href, true, 0, undefined]]
+		const urlsToCheck: [string, boolean, number, string?][] = originalUrls.map(u => [u.href, this.config.get, 0, undefined])
 
 		const processingRoutine = async (url: string, useGet: boolean, attempts: number, parent?: string) => {
 
@@ -88,7 +88,10 @@ export class Inspector {
 				if (url.includes("#")) {
 					url = url.split("#")[0]
 				}
-				const shouldParse = url == originalUrl.href || (recursive && originalUrl.origin == new URL(url).origin)
+				// Recursive is only done for one original URL : originalUrls[0]
+				const shouldParse =
+					(originalUrls.length == 1 && url == originalUrls[0].href)
+					|| (recursive && originalUrls[0].origin == new URL(url).origin)
 
 				if (
 					result.isChecked(url) ||
@@ -147,10 +150,14 @@ export class Inspector {
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			const [url, useGet, attempts, parent] = urlsToCheck.pop()!
 
-			promises.push(processingRoutine(url, useGet, attempts, parent))
+			if (this.config.singleThreaded) {
+				await processingRoutine(url, useGet, attempts, parent)
+			} else {
+				promises.push(processingRoutine(url, useGet, attempts, parent))
 
-			if (urlsToCheck.length == 0) {
-				await Promise.all(promises)
+				if (urlsToCheck.length == 0) {
+					await Promise.all(promises)
+				}
 			}
 		}
 
@@ -190,6 +197,7 @@ export class Config {
 	verbose = false
 	get = false
 	ignoreSkipped = false
+	singleThreaded = false
 	disablePrint = false
 	retries = 3
 }
