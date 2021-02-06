@@ -145,11 +145,16 @@ export class JUnitReporter implements IReporter {
 
 export class ConsoleReporter implements IReporter {
 
-	private printTotals(oks: number, skipped: number, broken: number, indent = true) {
+	private printTotals(oks: number, skipped: number, broken: number, brokenItems: ResultItem[], indent = true) {
 		console.log(`${indent ? "\t" : ""}${chalk.green(`OK: ${oks}`)}, ${chalk.dim(`skipped: ${skipped}`)}, ${chalk.red(`broken: ${broken}`)}`)
+		if (broken > 0) {
+			for (const item of brokenItems) {
+				this.printCheck(item, indent)
+			}
+		}
 	}
 
-	private printCheck(check: ResultItem) {
+	private printCheck(check: ResultItem, indent = true) {
 		let statusLabel: string
 		const labelWidth = 7
 
@@ -173,7 +178,7 @@ export class ConsoleReporter implements IReporter {
 		}
 
 		if (check.status != CheckStatus.Skipped) {
-			console.log(`\t${statusLabel} : ${chalk(check.url)} ${check.message ? `(${chalk.dim(check.message)})` : ""}`)
+			console.log(`${indent ? "\t" : ""}${statusLabel} : ${chalk(check.url)} ${check.message ? `(${chalk.dim(check.message)})` : ""}`)
 		}
 	}
 
@@ -182,6 +187,7 @@ export class ConsoleReporter implements IReporter {
 		let allSkipped = 0
 		let allOks = 0
 		let allBroken = 0
+		let allBrokenItems: ResultItem[] = []
 
 		for (const page of pages.entries()) {
 			console.log(page[0])
@@ -189,6 +195,7 @@ export class ConsoleReporter implements IReporter {
 			let skipped = 0
 			let oks = 0
 			let broken = 0
+			const brokenItems: ResultItem[] = []
 
 			for (const check of page[1]) {
 				switch (check.status) {
@@ -200,6 +207,7 @@ export class ConsoleReporter implements IReporter {
 					case CheckStatus.GenericError:
 					case CheckStatus.Timeout:
 						broken++
+						brokenItems.push(check)
 						break
 					case CheckStatus.Skipped:
 						skipped++
@@ -207,14 +215,14 @@ export class ConsoleReporter implements IReporter {
 				}
 
 				this.printCheck(check)
-
 			}
-			this.printTotals(oks, skipped, broken)
+			this.printTotals(oks, skipped, broken, brokenItems)
 			allOks += oks
 			allSkipped += skipped
 			allBroken += broken
+			allBrokenItems = allBrokenItems.concat(brokenItems)
 		}
-		this.printTotals(allOks, allSkipped, allBroken, false)
+		this.printTotals(allOks, allSkipped, allBroken, allBrokenItems, false)
 	}
 
 }
