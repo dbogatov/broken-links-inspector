@@ -123,8 +123,5 @@ retire-js-dependency_scanning:
 secret_detection:
   <<: *security-def
 
-secrets-sast:
-  <<: *security-def
-
-tslint-sast:
+eslint-sast:
   <<: *security-def
