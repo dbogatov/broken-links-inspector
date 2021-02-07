@@ -171,7 +171,7 @@ describe("process mock URL", function () {
 			)
 			const unhook_intercept = intercept(_ => { return "" })
 
-			const result = await inspector.processURL([new URL("https://original.com")], recursive)
+			const result = await inspector.processURL([new URL("https://original.com")], recursive, false)
 
 			unhook_intercept()
 
@@ -270,7 +270,7 @@ describe("process real URL", async () => {
 		config,
 		new AxiosHttpClient(config.timeout, config.acceptedCodes)
 	)
-	await inspector.processURL([new URL("https://dbogatov.org")], false)
+	await inspector.processURL([new URL("https://dbogatov.org")], false, false)
 })
 
 describe("process URL single-threaded", async () => {
@@ -282,7 +282,7 @@ describe("process URL single-threaded", async () => {
 		config,
 		new AxiosHttpClient(config.timeout, config.acceptedCodes)
 	)
-	await inspector.processURL([new URL("https://dbogatov.org")], false)
+	await inspector.processURL([new URL("https://dbogatov.org")], false, false)
 })
 
 describe("process multiple URLs", async () => {
@@ -293,7 +293,7 @@ describe("process multiple URLs", async () => {
 		config,
 		new AxiosHttpClient(config.timeout, config.acceptedCodes)
 	)
-	await inspector.processURL([new URL("https://dbogatov.org"), new URL("https://bogatova.org")], false)
+	await inspector.processURL([new URL("https://dbogatov.org"), new URL("https://bogatova.org")], false, false)
 })
 
 describe("result", () => {

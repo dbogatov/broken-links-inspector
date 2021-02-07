@@ -7,7 +7,7 @@ import { ConsoleReporter, JUnitReporter } from "./report"
 import fs from "fs/promises"
 
 commander
-	.version("1.3.3")
+	.version("1.3.4")
 	.description("Extract and recursively check all URLs reporting broken ones\n\nDedicated to Daria Bogatova \u2665")
 
 commander
@@ -70,7 +70,7 @@ commander
 			process.exit(0)
 		}
 
-		const result = await inspector.processURL(urls, urls.length == 1 ? inspectObj.recursive as boolean : false)
+		const result = await inspector.processURL(urls, inspectObj.recursive, url.startsWith("file://"))
 
 		for (const reporter of inspectObj.reporters as string[]) {
 			switch (reporter) {

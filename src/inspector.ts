@@ -71,7 +71,7 @@ export class Inspector {
 		private readonly httpClient: IHttpClient = new AxiosHttpClient(config.timeout, config.acceptedCodes)
 	) { }
 
-	async processURL(originalUrls: URL[], recursive: boolean): Promise<Result> {
+	async processURL(originalUrls: URL[], recursive: boolean, fomFile: boolean): Promise<Result> {
 
 		const result = new Result(this.config.ignoreSkipped, this.config.disablePrint)
 		// [url, GET, attempts, parent?]
@@ -90,7 +90,7 @@ export class Inspector {
 				}
 				// Recursive is only done for one original URL : originalUrls[0]
 				const shouldParse =
-					(originalUrls.length == 1 && url == originalUrls[0].href)
+					(!fomFile && url == originalUrls[0].href)
 					|| (recursive && originalUrls[0].origin == new URL(url).origin)
 
 				if (
