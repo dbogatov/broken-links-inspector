@@ -67,7 +67,7 @@ commander
 		})
 
 		if (urls.length == 0) {
-			process.exit(1)
+			process.exit(0)
 		}
 
 		const result = await inspector.processURL(urls, urls.length == 1 ? inspectObj.recursive as boolean : false)
