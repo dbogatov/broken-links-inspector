@@ -7,7 +7,7 @@ import { ConsoleReporter, JUnitReporter } from "./report"
 import fs from "fs/promises"
 
 commander
-	.version("1.3.1")
+	.version("1.3.3")
 	.description("Extract and recursively check all URLs reporting broken ones\n\nDedicated to Daria Bogatova \u2665")
 
 commander
