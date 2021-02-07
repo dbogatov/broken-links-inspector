@@ -7,11 +7,11 @@ import { ConsoleReporter, JUnitReporter } from "./report"
 import fs from "fs/promises"
 
 commander
-	.version("1.2.0")
+	.version("1.3.1")
 	.description("Extract and recursively check all URLs reporting broken ones\n\nDedicated to Daria Bogatova \u2665")
 
 commander
-	.command("inspect <url> <file://>")
+	.command("inspect <url>|<file://>")
 	.description("Check links in the given URL or a text file")
 	.option("-r, --recursive", "recursively check all links in all URLs within supplied host (ignored for file://)", false)
 	.option("-t, --timeout <number>", "timeout in ms after which the link will be considered broken", (value: string, _) => parseInt(value), 2000)
