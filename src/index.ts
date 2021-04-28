@@ -7,7 +7,7 @@ import { ConsoleReporter, JUnitReporter } from "./report"
 import fs from "fs/promises"
 
 commander
-	.version("1.3.4")
+	.version("1.4.0")
 	.description("Extract and recursively check all URLs reporting broken ones\n\nDedicated to Daria Bogatova \u2665")
 
 commander
@@ -19,6 +19,7 @@ commander
 	.option("-s, --skip <globs>", "URLs to skip defined by globs, like '*linkedin*'", (value: string, previous: string[]) => previous.concat([value]), [])
 	.option("--reporters <coma-separated-strings>", "Reporters to use in processing the results (junit, console)", (value: string, _) => value.split(","), ["console"])
 	.option("--retries <number>", "The number of times to retry TIMEOUT URLs", (value: string, _) => parseInt(value), 3)
+	.option("--user-agent <string>", "The User-Agent header", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Safari/605.1.15")
 	.option("--ignore-prefixes <coma-separated-strings>", "prefix(es) to ignore (without ':'), like mailto: and tel:", (value: string, _) => value.split(","), ["javascript", "data", "mailto", "sms", "tel", "geo"])
 	.option("--accept-codes <coma-separated-numbers>", "HTTP response code(s) (beyond 200-299) to accept, like 999 for linkedin", (value: string, _) => value.split(",").map(code => parseInt(code)), [999])
 	.option("--ignore-skipped", "Do not report skipped URLs", false)
@@ -63,7 +64,8 @@ commander
 			ignoreSkipped: inspectObj.ignoreSkipped as boolean,
 			singleThreaded: inspectObj.singleThreaded as boolean,
 			disablePrint: false,
-			retries: inspectObj.retries as number
+			retries: inspectObj.retries as number,
+			userAgent: inspectObj.userAgent as string
 		})
 
 		if (urls.length == 0) {

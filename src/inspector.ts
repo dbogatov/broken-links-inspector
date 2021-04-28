@@ -5,7 +5,7 @@ import { isMatch } from "matcher"
 import pluralize from "pluralize"
 
 export interface IHttpClient {
-	request(get: boolean, url: string): Promise<string>
+	request(get: boolean, url: string, ua: string): Promise<string>
 }
 
 export class HttpClientFailure {
@@ -37,12 +37,22 @@ export class AxiosHttpClient implements IHttpClient {
 		return result
 	}
 
-	async request(get: boolean, url: string): Promise<string> {
+	async request(get: boolean, url: string, ua: string): Promise<string> {
 
 		const instance = axios.create()
 
+		const headers = {
+			"User-Agent": ua,
+			"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+			"Accept-Language": "en-us",
+			"Connection": "keep-alive"
+		}
+
 		try {
-			return (await this.timeoutWrapper(this.timeout, () => get ? instance.get(url) : instance.head(url))).data as string
+			return (await this.timeoutWrapper(
+				this.timeout,
+				() => get ? instance.get(url, { headers: headers }) : instance.head(url, { headers: { headers: headers } })
+			)).data as string
 		} catch (exception) {
 
 			const error: AxiosError = exception
@@ -102,7 +112,7 @@ export class Inspector {
 				} else {
 					const urlToCheck = parent ? new URL(url, parent).href : url
 
-					const html = await this.httpClient.request(useGet || shouldParse, urlToCheck)
+					const html = await this.httpClient.request(useGet || shouldParse, urlToCheck, this.config.userAgent)
 
 					if (shouldParse) {
 
@@ -200,6 +210,7 @@ export class Config {
 	singleThreaded = false
 	disablePrint = false
 	retries = 3
+	userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Safari/605.1.15"
 }
 
 export enum URLMatchingRule {

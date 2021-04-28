@@ -12,7 +12,7 @@ class MockHttpClient implements IHttpClient {
 	// Map<url, [response, timeout, failure, code, retries]>
 	constructor(readonly map: Map<string, [string[], boolean, boolean, number, number]>) { }
 
-	async request(get: boolean, url: string): Promise<string> {
+	async request(get: boolean, url: string, _: string): Promise<string> {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const [urls, timeout, failure, code, retries] = this.map.get(url)!
 
@@ -120,13 +120,15 @@ const expectedNonRecursive = new Map<string, ResultItem[]>([
 
 describe("Axios web server", async () => {
 
+	const ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1 Safari/605.1.15"
+
 	it("OK", async () => {
-		await new AxiosHttpClient(5000, []).request(false, "https://dbogatov.org")
+		await new AxiosHttpClient(5000, []).request(false, "https://dbogatov.org", ua)
 	})
 
 	it("timeout", async () => {
 		try {
-			await new AxiosHttpClient(5, []).request(false, "https://dbogatov.org")
+			await new AxiosHttpClient(5, []).request(false, "https://dbogatov.org", ua)
 		} catch (exception) {
 			const error: HttpClientFailure = exception
 			assert(error.timeout)
@@ -135,7 +137,7 @@ describe("Axios web server", async () => {
 
 	it("404", async () => {
 		try {
-			await new AxiosHttpClient(2000, []).request(false, "https://dbogatov.org/not-found-123")
+			await new AxiosHttpClient(2000, []).request(false, "https://dbogatov.org/not-found-123", ua)
 		} catch (exception) {
 			const error: HttpClientFailure = exception
 			assert(error.code == 404)
@@ -144,7 +146,7 @@ describe("Axios web server", async () => {
 
 	it("generic", async () => {
 		try {
-			await new AxiosHttpClient(1000, []).request(true, "ftp://bad-url-54234534.com")
+			await new AxiosHttpClient(1000, []).request(true, "ftp://bad-url-54234534.com", ua)
 		} catch (exception) {
 			const error: HttpClientFailure = exception
 			assert(!error.timeout)

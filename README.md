@@ -148,6 +148,8 @@ Options:
   -s, --skip <globs>                          URLs to skip defined by globs, like '*linkedin*' (default: [])
   --reporters <coma-separated-strings>        Reporters to use in processing the results (junit, console) (default: ["console"])
   --retries <number>                          The number of times to retry TIMEOUT URLs (default: 3)
+  --user-agent <string>                       The User-Agent header (default: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15
+                                              (KHTML, like Gecko) Version/14.1 Safari/605.1.15")
   --ignore-prefixes <coma-separated-strings>  prefix(es) to ignore (without ':'), like mailto: and tel: (default: ["javascript","data","mailto","sms","tel","geo"])
   --accept-codes <coma-separated-numbers>     HTTP response code(s) (beyond 200-299) to accept, like 999 for linkedin (default: [999])
   --ignore-skipped                            Do not report skipped URLs (default: false)
@@ -179,6 +181,8 @@ Currently there are two: `console` and `junit`.
 JUnit file treats pages as test suites and URLs in a page as test cases.
 
 `--retries` will instruct the number of times to try a URL before declaring it failed.
+
+`--user-agent <string>` will use specified `User-Agent` header (some websites reply with 401 Unauthorized for "bots")
 
 `--ignore-prefixes <coma-separated-strings>` is a list of prefixes/ schemas to skip, such as `mailto:`.
 Provided list should not include colons.
